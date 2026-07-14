@@ -5,7 +5,7 @@
 	"name": "3d-agent",
 	"description": "AI-powered 3D model viewer — drag-and-drop glTF/GLB preview tool.",
 	"author": "nirholas",
-	"license": "Apache-2.0",
+	"license": "SEE LICENSE IN LICENSE",
 	"overrides": {
 		"serialize-javascript": ">=7.0.5"
 	},
