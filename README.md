@@ -1214,12 +1214,12 @@ Solana agents can ingest live pump.fun activity (GitHub social-fee claims, token
 |---|---|---|
 | MCP client | [api/_lib/pumpfun-mcp.js](api/_lib/pumpfun-mcp.js) | Cached JSON-RPC client to upstream `pumpfun-claims-bot` |
 | Read API | [api/agents/pumpfun.js](api/agents/pumpfun.js) | `?op=claims\|graduations\|token\|creator` |
-| SSE feed | [api/agents/pumpfun-feed.js](api/agents/pumpfun-feed.js) | Live event stream, 90s window, auto-reconnects |
-| Cron crawler | [api/cron/pumpfun-signals.js](api/cron/pumpfun-signals.js) | 15-min sweep → `pumpfun_signals` table |
+| SSE feed | [api/agents/pumpfun.js](api/agents/pumpfun.js) (`/api/agents/pumpfun-feed`) | Live event stream, 90s window, auto-reconnects |
+| Cron crawler | [api/cron/[name].js](api/cron/%5Bname%5D.js) (`pumpfun-signals` job) | 15-min sweep → `pumpfun_signals` table |
 | Skills | [src/agent-skills-pumpfun-watch.js](src/agent-skills-pumpfun-watch.js) | `recent-claims`, `token-intel`, `watch-start`, `watch-stop` |
 | Widget | [src/widgets/pumpfun-feed.js](src/widgets/pumpfun-feed.js) | Live cards overlay |
-| Reputation | [api/agents/solana-reputation.js](api/agents/solana-reputation.js) | `pumpfun_signals` block in response |
-| Passport | [api/agents/solana-card.js](api/agents/solana-card.js) | `pumpfun` block on the agent card |
+| Reputation | [api/agents/solana/[action].js](api/agents/solana/%5Baction%5D.js) (`reputation`) | `pumpfun_signals` block in response |
+| Passport | [api/agents/solana/[action].js](api/agents/solana/%5Baction%5D.js) (`card`) | `pumpfun` block on the agent card |
 
 The crawler runs on a `*/15 * * * *` schedule (see [vercel.json](vercel.json)) and writes into the `pumpfun_signals` table. Agents subscribed via `watch-start` react to incoming events through the existing protocol bus — no new event types required.
 
