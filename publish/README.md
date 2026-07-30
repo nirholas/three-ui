@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/d52515d1-cb04-4dd6-98bd-fef233312dc4
 **Give your AI a body.** three.ws is an open-source, browser-native 3D AI agent platform. Drop a GLB file, add an LLM brain, register on-chain, and embed anywhere — no plugins, no server uploads, no installs required.
 
 <video width="100%" height="auto" autoplay loop muted playsinline>
-  <source src="https://github.com/nirholas/3D-Agent/raw/refs/heads/main/public/skills.mp4" type="video/mp4">
+  <source src="https://github.com/nirholas/three-ui/raw/refs/heads/main/public/skills.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -354,8 +354,8 @@ Package: https://www.npmjs.com/package/three.ws
 #### Installation
 
 ```bash
-git clone https://github.com/nirholas/3D-Agent.git
-cd 3D-Agent
+git clone https://github.com/nirholas/three-ui.git
+cd three-ui
 npm install
 ```
 
@@ -422,7 +422,7 @@ The simplest possible setup — one script tag, one element, zero build step.
   </style>
 </head>
 <body>
-  <script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+  <script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
   <agent-3d body="https://cdn.three.ws/models/sample-avatar.glb"></agent-3d>
 </body>
 </html>
@@ -437,7 +437,7 @@ Drag-to-rotate, scroll-to-zoom, full PBR rendering — no API key, no account re
 Add `brain=` and `instructions=` to turn the viewer into a conversational agent.
 
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 
 <agent-3d
   body="https://cdn.three.ws/models/sample-avatar.glb"
@@ -460,7 +460,7 @@ The chat input and mic button appear automatically when `brain` is set. No UI to
 Pin the agent to a corner of the page so it persists as users scroll.
 
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 
 <agent-3d
   body="https://cdn.three.ws/models/sample-avatar.glb"
@@ -498,7 +498,7 @@ The element fetches the manifest (model URL, instructions, skills, memory config
 Hide the built-in chrome and wire in your own input using the element's JS API.
 
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 
 <agent-3d id="agent" body="./avatar.glb" brain="claude-sonnet-4-6" kiosk
   style="width:400px;height:560px;display:block"></agent-3d>
@@ -931,7 +931,7 @@ The element fires a `postMessage` API for host-page communication (documented in
 
 **Versioned CDN bundles** are published at `/agent-3d/x.y.z/agent-3d.js`. Use `latest` for auto-updates or pin to a version for stability:
 ```html
-<script src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 ```
 
 ---

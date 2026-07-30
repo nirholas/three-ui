@@ -950,7 +950,7 @@
 				const snippets = {
 					iframe: `<iframe src="${embedUrl}" width="420" height="520" style="border:0;border-radius:12px" allow="autoplay; xr-spatial-tracking"></iframe>`,
 					link: agentUrl,
-					webcomponent: `<script type="module" src="${origin}/dist-lib/agent-3d.js"><\/script>\n<agent-three.ws-id="${identity.id}" style="width:420px;height:520px"></agent-3d>`,
+					webcomponent: `<script type="module" src="${origin}/dist-lib/agent-3d.js"><\/script>\n<agent-3d agent-id="${identity.id}" style="width:420px;height:520px"></agent-3d>`,
 				};
 
 				let current = 'iframe';

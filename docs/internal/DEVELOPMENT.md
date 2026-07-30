@@ -22,8 +22,8 @@ Everything you need to know to work on three.ws locally.
 ## Setup
 
 ```bash
-git clone https://github.com/nirholas/3d-agent.git
-cd 3D-Agent
+git clone https://github.com/nirholas/three-ui.git
+cd three-ui
 npm install
 ```
 

@@ -1026,7 +1026,7 @@ async function renderEmbed(root) {
 	const webComponentSnippet = [
 		'<!-- Zero-install web component. Works in plain HTML, React, Vue, Svelte. -->',
 		`<script type="module" src="${origin}/lib.js"></script>`,
-		`<agent-three.ws-id="${esc(agent.id)}"`,
+		`<agent-3d agent-id="${esc(agent.id)}"`,
 		'          style="width:320px;height:420px;display:block;border-radius:16px;overflow:hidden">',
 		'</agent-3d>',
 	].join('\n');

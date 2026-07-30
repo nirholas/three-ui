@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/d52515d1-cb04-4dd6-98bd-fef233312dc4
 **Give your AI a body.** three.ws is an open-source, browser-native 3D AI agent platform. Drop a GLB file, add an LLM brain, register on-chain, and embed anywhere — no plugins, no server uploads, no installs required.
 
 <video width="100%" height="auto" autoplay loop muted playsinline>
-  <source src="https://github.com/nirholas/3D-Agent/raw/refs/heads/main/public/skills.mp4" type="video/mp4">
+  <source src="https://github.com/nirholas/three-ui/raw/refs/heads/main/public/skills.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -376,7 +376,7 @@ Package: https://www.npmjs.com/package/three.ws
 
 #### Prerequisites
 
-- Node.js 20+
+- Node.js 24.x (enforced by the `engines` field in `package.json`)
 - npm 10+
 - A Neon Postgres database (or any Postgres 15+)
 - A Cloudflare R2 bucket (or any S3-compatible store)
@@ -385,9 +385,9 @@ Package: https://www.npmjs.com/package/three.ws
 #### Installation
 
 ```bash
-git clone https://github.com/nirholas/3D-Agent.git
-cd 3D-Agent
-npm install
+git clone https://github.com/nirholas/three-ui.git
+cd three-ui
+npm ci
 ```
 
 ### Environment Setup
@@ -453,7 +453,7 @@ The simplest possible setup — one script tag, one element, zero build step.
   </style>
 </head>
 <body>
-  <script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+  <script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
   <agent-3d body="https://cdn.three.ws/models/sample-avatar.glb"></agent-3d>
 </body>
 </html>
@@ -468,7 +468,7 @@ Drag-to-rotate, scroll-to-zoom, full PBR rendering — no API key, no account re
 Add `brain=` and `instructions=` to turn the viewer into a conversational agent.
 
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 
 <agent-3d
   body="https://cdn.three.ws/models/sample-avatar.glb"
@@ -491,7 +491,7 @@ The chat input and mic button appear automatically when `brain` is set. No UI to
 Pin the agent to a corner of the page so it persists as users scroll.
 
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 
 <agent-3d
   body="https://cdn.three.ws/models/sample-avatar.glb"
@@ -529,7 +529,7 @@ The element fetches the manifest (model URL, instructions, skills, memory config
 Hide the built-in chrome and wire in your own input using the element's JS API.
 
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 
 <agent-3d id="agent" body="./avatar.glb" brain="claude-sonnet-4-6" kiosk
   style="width:400px;height:560px;display:block"></agent-3d>
@@ -962,7 +962,7 @@ The element fires a `postMessage` API for host-page communication (documented in
 
 **Versioned CDN bundles** are published at `/agent-3d/x.y.z/agent-3d.js`. Use `latest` for auto-updates or pin to a version for stability:
 ```html
-<script src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 ```
 
 ---
@@ -1195,7 +1195,7 @@ Solana ships an ERC-8004 analog without any custom on-chain program:
 SDK:
 
 ```js
-import { attestFeedback, attestValidation, listAttestations } from '@nirholas/agent-kit';
+import { attestFeedback, attestValidation, listAttestations } from '@three-ws/sdk';
 
 await attestFeedback({ agentAsset, score: 5, network: 'devnet' });
 await attestValidation({ agentAsset, taskHash: '0x…', passed: true, network: 'devnet' });
@@ -1295,8 +1295,11 @@ plan_quotas  (plan, max_avatars, max_bytes_per_avatar, max_total_bytes)
 | `npm run build` | Production build to `dist/` |
 | `npm run build:lib` | Build `<agent-3d>` web component library to `dist-lib/` |
 | `npm run build:artifact` | Build standalone Claude artifact viewer bundle |
-| `npm run build:all` | build + build:lib + publish:lib |
-| `npm run publish:lib` | Publish versioned CDN bundles to `/agent-3d/` |
+| `npm run build:chat` | `npm ci` + build inside `chat/`, emitting `public/chat/assets/` |
+| `npm run build:rider` | Copy the pre-built `rider/` bundle into `dist/rider/` |
+| `npm run build:all` | build:chat + build + build:rider + build:lib + publish:lib |
+| `npm run publish:lib` | Copy `dist-lib/` into `dist/agent-3d/<version>/` with SRI hashes |
+| `npm run check:dist` | Assert the expected files landed in `dist/` |
 | `npm run test` | Run Vitest suite |
 | `npm run verify` | Prettier check + Vite build (pre-deploy gate) |
 | `npm run format` | Prettier write (entire repo) |
@@ -1307,17 +1310,17 @@ plan_quotas  (plan, max_avatars, max_bytes_per_avatar, max_total_bytes)
 
 ### Vercel Deployment
 
-The project is built for Vercel. Deployment is one command:
+> **Hosting note.** The `npm run deploy` path below targets Vercel, and the Vercel account that once hosted this project is no longer active, so `*.vercel.app` URLs for it do not resolve. Source of truth is [github.com/nirholas/three-ui](https://github.com/nirholas/three-ui); the live platform runs on other infrastructure at [three.ws](https://three.ws). Use **Self-Hosting** below for a fresh deployment, and treat `vercel.json` as what it is: a live routing/rewrite/cron table that any host can read, not proof of where this runs.
+
+`vercel.json` defines routing, rewrites, cache headers, and cron schedules. If you do deploy to your own Vercel account, one command covers it:
 
 ```bash
 npm run deploy
 ```
 
-This runs `build:all` then `vercel --prod`. Routing, rewrites, cache headers, and cron schedules are defined in `vercel.json`.
+This runs `build:all` then `vercel --prod`.
 
-For preview deployments, push a branch — Vercel auto-deploys it with a preview URL.
-
-**Environment variables** must be set in the Vercel dashboard (not in `.env` files). See [Environment Variables](#environment-variables) for the full list.
+**Environment variables** must be set in your host's dashboard (not in `.env` files). See [Environment Variables](#environment-variables) for the full list.
 
 ### Self-Hosting
 
@@ -1325,6 +1328,14 @@ For a traditional server deployment:
 
 1. Build: `npm run build` → `dist/`
 2. Serve `dist/` as static files (nginx, Caddy, Express)
+
+> **Which build do I need?** `npm run build` alone produces a servable `dist/`: every HTML entry point renders and its hashed JS/CSS bundles are emitted next to it. Two pages pull in artifacts that only the longer chain produces, and their sub-resources 404 until you run it:
+>
+> - `/first-meet/` loads `/dist-lib/agent-3d.js`. `npm run build:lib` writes that bundle to `dist-lib/` (outside `dist/`), and `npm run publish:lib` mirrors it to `dist/dist-lib/` as well as to the versioned `dist/agent-3d/<version>/` copies. Run both, then `npm run check:dist` to confirm.
+> - `/chat/` loads `/chat/assets/*`, produced by `npm run build:chat` (it runs `npm ci` inside `chat/` and writes `public/chat/assets/`, which is gitignored because it is generated).
+>
+> `npm run build:all` runs the whole chain (`build:chat` → `build` → `build:rider` → `build:lib` → `publish:lib`). Order matters: `build` empties `dist/`, so everything that writes into `dist/` must run after it. `build:rider` only copies the pre-built `rider/build`, `rider/assets`, and `rider/vendor` directories, which are tracked in the repo.
+
 3. Run `api/` endpoints via Node.js (wrap with Express or use the Vercel dev adapter)
 4. Connect to Postgres (Neon or self-hosted)
 5. Connect to S3-compatible storage (R2, MinIO, AWS S3)

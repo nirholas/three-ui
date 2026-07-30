@@ -25,7 +25,7 @@ None of the optional layers (Redis, IPFS, blockchain relayer) are required to ru
 
 The fastest route from zero to running:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nirholas/3d-agent)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nirholas/three-ui)
 
 1. Click the button → connect your GitHub account → Vercel forks the repo to your account.
 2. Fill in the environment variables (see the [Required environment variables](#required-environment-variables) section below).
@@ -273,7 +273,7 @@ Without Redis the platform still works — rate limits run in-memory per serverl
 ### Setup
 
 ```bash
-git clone https://github.com/nirholas/3d-agent.git
+git clone https://github.com/nirholas/three-ui.git
 cd 3d-agent
 npm install
 

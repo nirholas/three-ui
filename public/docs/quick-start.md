@@ -52,13 +52,13 @@ The fastest path. No npm, no bundler, no build step.
 For projects that have a build step (Vite, Webpack, Create React App, etc.):
 
 ```bash
-npm install @3dagent/sdk
+npm install three.ws
 ```
 
 ### Plain JS / Vite
 
 ```js
-import '@3dagent/sdk'; // registers <agent-3d> as a side effect
+import 'three.ws'; // registers <agent-3d> as a side effect
 
 // The custom element is now available in HTML, or create it programmatically:
 const agent = document.createElement('agent-3d');
@@ -70,7 +70,7 @@ document.body.appendChild(agent);
 ### React
 
 ```jsx
-import '@3dagent/sdk';
+import 'three.ws';
 
 export function AgentWidget() {
   return (
@@ -141,7 +141,7 @@ The chat input and microphone button appear automatically when `brain` is set. T
 If you've registered an agent on the platform, load it by its UUID instead:
 
 ```html
-<agent-three.ws-id="a1b2c3d4-e5f6-7890-abcd-ef1234567890"></agent-3d>
+<agent-3d agent-id="a1b2c3d4-e5f6-7890-abcd-ef1234567890"></agent-3d>
 ```
 
 The element fetches the agent manifest — which includes the model URL, instructions, skills, and memory configuration — from the API. No other attributes needed.
@@ -182,7 +182,7 @@ For the full widget API including `postMessage` events, see the [Widget docs](..
 For contributors or self-hosters:
 
 ```bash
-git clone https://github.com/nirholas/3d-agent.git
+git clone https://github.com/nirholas/three-ui.git
 cd 3d-agent
 npm install
 cp .env.example .env        # fill in your API keys (see below)

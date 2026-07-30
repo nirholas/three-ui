@@ -490,7 +490,7 @@ Now that you have a working agent, here's what to explore next:
 - [Memory system](../memory.md) — the agent can remember things across conversations using local storage or IPFS.
 
 **Make it permanent:**
-- [ERC-8004 registration](../erc8004.md) — register your agent on-chain for a permanent, decentralized identity. Once registered, anyone can load your agent by its on-chain ID: `<agent-three.ws-id="42" chain-id="8453">`.
+- [ERC-8004 registration](../erc8004.md) — register your agent on-chain for a permanent, decentralized identity. Once registered, anyone can load your agent by its on-chain ID: `<agent-3d agent-id="42" chain-id="8453">`.
 
 **Embed it anywhere:**
 - [Embedding guide](../embedding.md) — embed Aria as a floating bubble in the corner of any existing website, or as an iframe widget with a single line of code.

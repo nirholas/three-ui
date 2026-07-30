@@ -262,7 +262,7 @@ The avatar asset library welcomes clothing, hair, accessories, and other charact
 
 ## Reporting Bugs
 
-Open a [GitHub issue](https://github.com/nirholas/3d-agent/issues/new) and include:
+Open a [GitHub issue](https://github.com/nirholas/three-ui/issues/new) and include:
 
 - Browser and OS version
 - Steps to reproduce (numbered, specific)
@@ -271,7 +271,7 @@ Open a [GitHub issue](https://github.com/nirholas/3d-agent/issues/new) and inclu
 - Console errors — screenshot or paste the full message
 - A link to a GLB file that triggers the issue, if relevant
 
-Check [existing issues](https://github.com/nirholas/3d-agent/issues) before opening a new one to avoid duplicates.
+Check [existing issues](https://github.com/nirholas/three-ui/issues) before opening a new one to avoid duplicates.
 
 **Security vulnerabilities:** Do NOT open a public issue. Follow the responsible disclosure process described in the [Security documentation](./security.md). Public disclosure of an unpatched vulnerability puts all users at risk.
 
@@ -279,11 +279,9 @@ Check [existing issues](https://github.com/nirholas/3d-agent/issues) before open
 
 ## Getting Help
 
-- **[GitHub Discussions](https://github.com/nirholas/3d-agent/discussions)** — design questions, architecture ideas, general "how does X work"
-- **[GitHub Issues](https://github.com/nirholas/3d-agent/issues)** — bug reports and concrete feature requests
-- **Discord** — real-time chat (link in the README)
+- **[GitHub Issues](https://github.com/nirholas/three-ui/issues)**: bug reports, concrete feature requests, design and architecture questions
 
-Core team response times: typically 2–3 business days on GitHub, faster in Discord. If a PR has been open for a week with no review, a polite ping in Discord is welcome.
+GitHub Discussions is not enabled on this repository, so open an issue for anything that is not a bug. Core team response times are typically 2 to 3 business days. If a PR has been open for a week with no review, a polite ping on the issue thread is welcome.
 
 ---
 

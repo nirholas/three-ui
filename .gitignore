@@ -46,3 +46,9 @@ experiments/*/build
 # Reference repo clones (read-only)
 forks/*/
 .env.production
+
+# Local TLS material (never commit a private key)
+*.pem
+*.key
+*.p12
+*.pfx

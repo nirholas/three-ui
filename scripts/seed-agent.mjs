@@ -1,8 +1,15 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(
-	'postgresql://neondb_owner:npg_4nWXZhq2Hjse@ep-rapid-surf-ak9p7occ-pooler.c-3.us-west-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require',
-);
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+	console.error(
+		'DATABASE_URL is not set. Export it (or put it in .env.local) before running this seed script:\n' +
+			'  DATABASE_URL="postgres://user:pass@host/db?sslmode=require" node scripts/seed-agent.mjs',
+	);
+	process.exit(1);
+}
+
+const sql = neon(connectionString);
 
 const [user] = await sql`
 	INSERT INTO users (email, display_name, email_verified)

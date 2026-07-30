@@ -296,7 +296,7 @@ For contributors and maintainers. A release follows these steps:
 4. A git tag is created: `git tag v1.5.1 && git push origin v1.5.1`
 5. A GitHub Release is created from the tag with the changelog entry as the body.
 6. `npm run build:all` produces the platform bundle and the CDN library build.
-7. `npm run publish-lib` copies the CDN bundle into `dist/agent-3d/{version}/`, generates an `integrity.json` sidecar with SHA-384 hashes, updates the rolling channel aliases (`1.5`, `1`, `latest`), and writes a `versions.json` manifest.
+7. `npm run publish:lib` copies the CDN bundle into `dist/agent-3d/{version}/`, generates an `integrity.json` sidecar with SHA-384 hashes, updates the rolling channel aliases (`1.5`, `1`, `latest`), and writes a `versions.json` manifest.
 8. Vercel auto-deploys from `main` and serves the updated `dist/` directory on the CDN.
 
 The SDK (`@nirholas/agent-kit`) is published to npm separately:

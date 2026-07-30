@@ -46,12 +46,12 @@ The Studio offers two snippet formats. Here's what each one looks like and when 
 <!-- One-time: add to <head> -->
 <script
   type="module"
-  src="https://three.ws/agent-3d/1.5.1/agent-3d.js"
+  src="https://three.ws/agent-3d/1.5.2/agent-3d.js"
   crossorigin="anonymous"
 ></script>
 
 <!-- Where you want the agent -->
-<agent-three.ws-id="42" chain-id="8453" mode="floating"></agent-3d>
+<agent-3d agent-id="42" chain-id="8453" mode="floating"></agent-3d>
 ```
 
 The iframe is the safer default for platforms where you can't control the `<head>` (Notion, Substack, Medium). The web component is the right choice anywhere you control the full page — it gives you CSS theming, JS events, and better performance.
@@ -72,7 +72,7 @@ The complete setup for a static site — no build tool, no framework, no npm.
   <!-- 1. Load the agent runtime once, in <head> -->
   <script
     type="module"
-    src="https://three.ws/agent-3d/1.5.1/agent-3d.js"
+    src="https://three.ws/agent-3d/1.5.2/agent-3d.js"
     crossorigin="anonymous"
   ></script>
 </head>
@@ -117,7 +117,7 @@ For an inline embed with explicit dimensions:
 
 **Lazy loading is on by default.** The agent won't boot until it scrolls into the viewport (powered by `IntersectionObserver`). Add `eager` to load immediately regardless:
 ```html
-<agent-three.ws-id="42" chain-id="8453" eager></agent-3d>
+<agent-3d agent-id="42" chain-id="8453" eager></agent-3d>
 ```
 
 ---
@@ -127,7 +127,7 @@ For an inline embed with explicit dimensions:
 ### Install
 
 ```bash
-npm install @3dagent/sdk
+npm install three.ws
 ```
 
 ### Create a wrapper component
@@ -137,7 +137,7 @@ npm install @3dagent/sdk
 'use client'; // Required for Next.js App Router
 
 import { useEffect, useRef } from 'react';
-import '@3dagent/sdk'; // registers <agent-3d> as a custom element
+import 'three.ws'; // registers <agent-3d> as a custom element
 
 export default function Agent3D({ agentId, chainId = '8453', mode = 'floating' }) {
   const ref = useRef();
@@ -229,7 +229,7 @@ declare namespace JSX {
 ```html
 <script
   type="module"
-  src="https://three.ws/agent-3d/1.5.1/agent-3d.js"
+  src="https://three.ws/agent-3d/1.5.2/agent-3d.js"
 ></script>
 <agent-3d
   agent-id="42"
@@ -250,7 +250,7 @@ To show a floating agent on every page of your site:
 ```html
 <script
   type="module"
-  src="https://three.ws/agent-3d/1.5.1/agent-3d.js"
+  src="https://three.ws/agent-3d/1.5.2/agent-3d.js"
 ></script>
 ```
 3. In **Footer Code** (before `</body>`), add the element:
@@ -276,7 +276,7 @@ To show a floating agent on every page of your site:
 ```html
 <script
   type="module"
-  src="https://three.ws/agent-3d/1.5.1/agent-3d.js"
+  src="https://three.ws/agent-3d/1.5.2/agent-3d.js"
 ></script>
 ```
 4. Save
@@ -307,14 +307,14 @@ Add to your child theme's `functions.php`:
 
 ```php
 function add_3dagent_script() {
-    echo '<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>';
+    echo '<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>';
 }
 add_action('wp_head', 'add_3dagent_script');
 ```
 
 Then add a **Custom HTML** block in the Gutenberg editor wherever you want the agent:
 ```html
-<agent-three.ws-id="42" chain-id="8453"></agent-3d>
+<agent-3d agent-id="42" chain-id="8453"></agent-3d>
 ```
 
 ---
@@ -326,7 +326,7 @@ Then add a **Custom HTML** block in the Gutenberg editor wherever you want the a
 1. Edit the page, click **Add Block**, choose **Code**
 2. Paste the complete snippet (script + element together — Squarespace Code blocks don't share scope):
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 <agent-3d
   agent-id="42"
   chain-id="8453"
@@ -341,7 +341,7 @@ Then add a **Custom HTML** block in the Gutenberg editor wherever you want the a
 1. Go to **Settings → Advanced → Code Injection**
 2. In the **Footer** field, paste:
 ```html
-<script type="module" src="https://three.ws/agent-3d/1.5.1/agent-3d.js"></script>
+<script type="module" src="https://three.ws/agent-3d/1.5.2/agent-3d.js"></script>
 <agent-3d
   agent-id="42"
   chain-id="8453"
@@ -431,13 +431,13 @@ Set a background color with the `background` attribute:
 
 ```html
 <!-- Transparent (default) — composites over your page -->
-<agent-three.ws-id="42" background="transparent"></agent-3d>
+<agent-3d agent-id="42" background="transparent"></agent-3d>
 
 <!-- Dark scene background -->
-<agent-three.ws-id="42" background="dark"></agent-3d>
+<agent-3d agent-id="42" background="dark"></agent-3d>
 
 <!-- Light scene background -->
-<agent-three.ws-id="42" background="light"></agent-3d>
+<agent-3d agent-id="42" background="light"></agent-3d>
 ```
 
 ---
@@ -460,7 +460,7 @@ Or if the parent truly needs to stack above the agent, wrap the `<agent-3d>` in 
 **Agent is too small / too large**
 Set explicit `width` and `height` attributes (CSS length values):
 ```html
-<agent-three.ws-id="42" width="480px" height="640px"></agent-3d>
+<agent-3d agent-id="42" width="480px" height="640px"></agent-3d>
 ```
 
 **Next.js hydration error**

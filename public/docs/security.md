@@ -117,7 +117,7 @@ Pin the exact bundle version and validate with Subresource Integrity:
 ```html
 <script
   type="module"
-  src="https://three.ws/agent-3d/1.5.1/agent-3d.js"
+  src="https://three.ws/agent-3d/1.5.2/agent-3d.js"
   integrity="sha384-…"
   crossorigin="anonymous"
 ></script>

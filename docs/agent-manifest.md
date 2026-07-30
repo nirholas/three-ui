@@ -44,7 +44,7 @@ The `<agent-3d>` element accepts several source forms. Priority when multiple at
 <agent-3d manifest="https://cdn.acme.com/aria/manifest.json"></agent-3d>
 
 <!-- Backend agent ID (platform-hosted) -->
-<agent-three.ws-id="aria-guide"></agent-3d>
+<agent-3d agent-id="aria-guide"></agent-3d>
 
 <!-- Bare GLB — no manifest, viewer mode only -->
 <agent-3d body="./product.glb"></agent-3d>
