@@ -537,7 +537,14 @@ async function handleLaunchPrep(req, res) {
 		const global = await sdk.fetchGlobal();
 		const solAmount = new BN(Math.floor(body.sol_buy_in * LAMPORTS_PER_SOL_LAUNCH));
 		const pumpSdk = await import('@pump-fun/pump-sdk');
-		const tokenAmount = pumpSdk.getBuyTokenAmountFromSolAmount(global, null, solAmount);
+		const feeConfig = await sdk.fetchFeeConfig();
+		const tokenAmount = pumpSdk.getBuyTokenAmountFromSolAmount({
+			global,
+			feeConfig,
+			mintSupply: null,
+			bondingCurve: null,
+			amount: solAmount,
+		});
 		const ixs = await sdk.createAndBuyInstructions({
 			global,
 			mint,
@@ -1147,19 +1154,29 @@ async function handleQuote(req, res) {
 		}
 
 		if (curve && !curve.complete) {
-			const global = typeof sdk.fetchGlobal === 'function' ? await sdk.fetchGlobal() : null;
+			const [global, feeConfig] = await Promise.all([sdk.fetchGlobal(), sdk.fetchFeeConfig()]);
 			const pumpSdk = await import('@pump-fun/pump-sdk');
+			const curveArgs = {
+				global,
+				feeConfig,
+				mintSupply: curve.tokenTotalSupply,
+				bondingCurve: curve,
+			};
 			let quote = null;
 
 			if (direction === 'buy' && solRaw) {
 				const sol = Number(solRaw);
 				if (!(sol > 0)) return error(res, 400, 'validation_error', 'sol must be > 0');
 				const lamports = new BN(Math.floor(sol * LAMPORTS_PER_SOL_Q));
-				const tokens = pumpSdk.getBuyTokenAmountFromSolAmount(global, curve, lamports);
+				const tokens = pumpSdk.getBuyTokenAmountFromSolAmount({
+					...curveArgs,
+					amount: lamports,
+					quoteMint: curve.quoteMint,
+				});
 				quote = { sol_in: sol, tokens_out: tokens.toString(), source: 'bonding_curve' };
 			} else if (direction === 'sell' && tokenRaw) {
 				const tokens = new BN(tokenRaw);
-				const lamports = pumpSdk.getSellSolAmountFromTokenAmount(global, curve, tokens);
+				const lamports = pumpSdk.getSellSolAmountFromTokenAmount({ ...curveArgs, amount: tokens });
 				quote = {
 					tokens_in: tokenRaw,
 					sol_out: Number(lamports.toString()) / LAMPORTS_PER_SOL_Q,
@@ -1172,11 +1189,13 @@ async function handleQuote(req, res) {
 				network,
 				graduated: false,
 				bonding_curve: {
-					real_sol_reserves: curve.realSolReserves?.toString?.() ?? null,
+					real_sol_reserves: curve.realQuoteReserves?.toString?.() ?? null,
 					real_token_reserves: curve.realTokenReserves?.toString?.() ?? null,
-					virtual_sol_reserves: curve.virtualSolReserves?.toString?.() ?? null,
+					virtual_sol_reserves: curve.virtualQuoteReserves?.toString?.() ?? null,
 					virtual_token_reserves: curve.virtualTokenReserves?.toString?.() ?? null,
 					complete: curve.complete ?? false,
+					is_holder_reward: curve.isHolderReward === true,
+					is_cashback_coin: curve.isCashbackCoin === true,
 				},
 				quote,
 			});

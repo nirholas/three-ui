@@ -115,9 +115,9 @@ describe('tools/call getBondingCurve', () => {
 	it('returns curve data from on-chain fetchBuyState', async () => {
 		sdkMock.fetchBuyState.mockResolvedValueOnce({
 			bondingCurve: {
-				realSolReserves: { toString: () => '50000000000' }, // 50 SOL
+				realQuoteReserves: { toString: () => '50000000000' }, // 50 SOL
 				realTokenReserves: { toString: () => '500000000' },
-				virtualSolReserves: { toString: () => '30000000000' },
+				virtualQuoteReserves: { toString: () => '30000000000' },
 				virtualTokenReserves: { toString: () => '1073000000' },
 				complete: false,
 			},

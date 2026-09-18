@@ -737,7 +737,7 @@ async function pumpStatsSnapshotMint({ network, mint }) {
 	}
 
 	if (curve && !curve.complete) {
-		const realSol = BigInt(curve.realSolReserves?.toString?.() ?? '0');
+		const realSol = BigInt(curve.realQuoteReserves?.toString?.() ?? '0');
 		const pct =
 			GRADUATION_REAL_SOL > 0n
 				? Number((realSol * 10000n) / GRADUATION_REAL_SOL) / 100
@@ -745,7 +745,7 @@ async function pumpStatsSnapshotMint({ network, mint }) {
 		out.bonding_curve = {
 			real_sol: realSol.toString(),
 			real_token: curve.realTokenReserves?.toString?.() ?? null,
-			virtual_sol: curve.virtualSolReserves?.toString?.() ?? null,
+			virtual_sol: curve.virtualQuoteReserves?.toString?.() ?? null,
 			virtual_token: curve.virtualTokenReserves?.toString?.() ?? null,
 			complete: curve.complete ?? false,
 			progress_pct: pct != null ? Math.min(100, Math.max(0, pct)) : null,

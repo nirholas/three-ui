@@ -6,7 +6,7 @@ A collection of [Agent Skills](https://agentskills.io) that teach AI agents how 
 
 This skill library provides AI agents with the tools to interact with pump.fun's on-chain ecosystem:
 
-- **Coin Creation** — Launch coins with optional initial buy, mayhem mode, cashback, tokenized agent support, and front-runner protection
+- **Coin Creation**: launch coins with optional initial buy, mayhem mode, holder rewards, tokenized agent support, and front-runner protection
 - **Token Swaps** — Buy and sell tokens on bonding curve or graduated AMM pools with slippage protection
 - **Creator Fee Management** — Inspect, collect, and distribute creator fees with configurable sharing among multiple shareholders
 - **Tokenized Agent Payments** — Accept payments and verify invoices on-chain using the Pump Agent Payments SDK
@@ -15,7 +15,7 @@ This skill library provides AI agents with the tools to interact with pump.fun's
 
 | Skill | Description |
 | ----- | ----------- |
-| [**Create Coin**](create-coin/) | Create coins on pump.fun with an initial buy. Supports mayhem mode, cashback, tokenized agents with buyback %, and front-runner protection via Jito. Uses the `@pump-fun/pump-sdk` and pump.fun API. |
+| [**Create Coin**](create-coin/) | Create coins on pump.fun with an initial buy. Supports mayhem mode, holder rewards, tokenized agents with buyback %, and front-runner protection via Jito. Uses the `@pump-fun/pump-sdk` and pump.fun API. |
 | [**Swap**](swap/) | Buy and sell tokens on the bonding curve or AMM pool. Automatically detects coin state (bonding vs graduated) and builds the correct transaction. Supports slippage protection and Jito front-runner protection. |
 | [**Coin Fees**](coin-fees/) | Inspect creator fee destinations and vault balances, collect fees, distribute shared fees to shareholders, and create or update sharing configs with up to 10 shareholders. |
 | [**Tokenized Agent Payments**](tokenized-agents/) | Accept USDC or wrapped SOL payments and verify invoices on-chain for Pump Tokenized Agents using `@pump-fun/agent-payments-sdk`. Includes wallet integration guides for React/Next.js. |

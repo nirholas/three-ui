@@ -2,7 +2,7 @@
 name: coin-fees
 description: >
   Inspect and manage creator fees on pump.fun — determine fee destinations
-  (cashback, shared config, or direct creator), collect fees, distribute
+  (cashback, holder rewards, shared config, or direct creator), collect fees, distribute
   shared fees to shareholders, and query vault balances. Prefer runnable
   Node scripts in this skill folder; use @pump-fun/pump-sdk and
   @pump-fun/pump-swap-sdk for custom integrations.
@@ -170,7 +170,7 @@ Check `npm info @pump-fun/pump-sdk dependencies` and align `@solana/web3.js` / `
 import {
   PUMP_SDK,
   OnlinePumpSdk,
-  isCreatorUsingSharingConfig,
+  hasCoinCreatorMigratedToSharingConfig,
   creatorVaultPda,
   feeSharingConfigPda,
   canonicalPumpPoolPda,
@@ -204,8 +204,13 @@ When an agent needs to understand where creator fees go for a coin, follow this 
    │   → Use `POST /agents/collect-fees` with the user's wallet to claim their cashback
    │   → Claims from pump program; also claims from pump AMM (with WSOL unwrap) if graduated
    │
-   └─ isCashbackCoin === false
-       3. Check isCreatorUsingSharingConfig({ mint, creator })
+   ├─ bondingCurve.isHolderReward === true (Pump SDK 2)
+   │   → Fees go to HOLDERS via creatorVaultPda(holderRewardsPda(mint))
+   │   → pump.fun's holder-reward claim authority pays them out (distribute_fee_to_holders)
+   │   → Launcher cannot collect or create a sharing config
+   │
+   └─ neither
+       3. Check hasCoinCreatorMigratedToSharingConfig({ mint, creator })
           ├─ true → Fees go to SHARING CONFIG SHAREHOLDERS
           │   → Load feeSharingConfigPda(mint) → decodeSharingConfig
           │   → Lists shareholders with address + BPS shares
@@ -437,6 +442,7 @@ Then confirm as usual with `connection.confirmTransaction`.
 ## Error handling and troubleshooting
 
 - **Cashback coin** — `isCashbackCoin === true`: no creator vault, but users can claim their trading cashback via `POST /agents/collect-fees`. The endpoint builds a transaction that claims from the pump program, and also from the pump AMM (with WSOL unwrapping) if the coin has graduated. `fetch-fee-info.mjs` returns `feeDestination: "cashback"`.
+- **Holder-reward coin** (Pump SDK 2): `bondingCurve.isHolderReward === true`. The program made `holderRewardsPda(mint)` the creator at launch, so every creator fee accrues to that PDA's vault and pump.fun's holder-reward claim authority pays it out to holders with `distribute_fee_to_holders`. The launcher cannot collect or re-share these fees: `build-collect-fee-tx.mjs` and `build-sharing-config-tx.mjs` refuse the coin, and `fetch-fee-info.mjs` returns `feeDestination: "holder_reward"` with the PDA vault balance. Permanent for the life of the coin.
 - **Sharing config not active** — the account at `feeSharingConfigPda(mint)` may not exist or may be in a non-active state; `fetch-fee-info.mjs` will report `hasSharingConfig: false`.
 - **Vault below minimum distributable threshold** — `fetch-distributable-info.mjs` returns `canDistribute: false` and shows `minimumRequired` vs actual balance.
 - **Bonding curve account missing** — wrong mint, wrong network, or uninitialized coin.
@@ -446,7 +452,7 @@ Then confirm as usual with `connection.confirmTransaction`.
 ## End-to-end flow
 
 1. Confirm coin mint address, signer wallet, and operation type; set `SOLANA_RPC_URL`.
-2. Run `fetch-fee-info.mjs --mint <MINT>` to inspect fee destination (`cashback`, `sharing_config`, or `creator`), vault balances, and sharing config shareholders if applicable.
+2. Run `fetch-fee-info.mjs --mint <MINT>` to inspect fee destination (`cashback`, `holder_reward`, `sharing_config`, or `creator`), vault balances, and sharing config shareholders if applicable.
 3. Based on `feeDestination`:
    - `"cashback"` → Use `POST /agents/collect-fees` with the user's wallet to claim their trading cashback (claims from pump program + pump AMM if graduated).
    - `"creator"` → Use `POST /agents/collect-fees` to build a crank transaction. Only use `build-collect-fee-tx.mjs` if the user explicitly requests scripts.

@@ -13,7 +13,7 @@ import {
   canonicalPumpPoolPda,
   creatorVaultPda,
   feeSharingConfigPda,
-  isCreatorUsingSharingConfig,
+  hasCoinCreatorMigratedToSharingConfig,
   getPumpAmmProgram,
 } from "@pump-fun/pump-sdk";
 import {
@@ -97,7 +97,7 @@ async function main() {
   const effectiveCreator = poolCoinCreator ?? new PublicKey(bondingCurve.creator);
 
   // Verify sharing config
-  if (!isCreatorUsingSharingConfig({ mint, creator: effectiveCreator })) {
+  if (!hasCoinCreatorMigratedToSharingConfig({ mint, creator: effectiveCreator })) {
     throw new Error(
       "This coin does not use a fee sharing config. " +
       "Distributable info is only available for coins with sharing configs.",

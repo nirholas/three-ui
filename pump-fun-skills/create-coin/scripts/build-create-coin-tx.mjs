@@ -14,6 +14,7 @@ import {
   PUMP_SDK,
   OnlinePumpSdk,
   getBuyTokenAmountFromSolAmount,
+  holderRewardsPda,
 } from "@pump-fun/pump-sdk";
 import { PumpAgentOffline } from "@pump-fun/agent-payments-sdk";
 import { getConnection } from "./lib/env.mjs";
@@ -48,7 +49,8 @@ Required:
 
 Optional:
   --mayhem-mode             Enable mayhem mode (default: off)
-  --cashback                Enable cashback for this coin (default: off)
+  --holder-reward           Launch a holder-reward coin: every creator fee is paid out to
+                            holders instead of the creator. Permanent (default: off)
   --tokenized-agent         Enable tokenized agent (default: off; requires initial buy > 0)
   --buyback-bps <int>       Buyback basis points for tokenized agent (default: ${DEFAULT_BUYBACK_BPS} = 50%; requires --tokenized-agent)
   --alt-address <PUBKEY>    Address Lookup Table; defaults to mainnet/devnet built-in ALT if omitted
@@ -72,6 +74,7 @@ async function main() {
       "sol-lamports": { type: "string" },
       "mint-keypair-out": { type: "string" },
       "mayhem-mode": { type: "boolean", default: false },
+      "holder-reward": { type: "boolean", default: false },
       cashback: { type: "boolean", default: false },
       "tokenized-agent": { type: "boolean", default: false },
       "buyback-bps": { type: "string" },
@@ -99,7 +102,13 @@ async function main() {
   const outPath = requireString("--mint-keypair-out", values["mint-keypair-out"]);
   const resolvedOut = resolve(process.cwd(), outPath);
   const mayhemMode = Boolean(values["mayhem-mode"]);
-  const cashback = Boolean(values.cashback);
+  if (values.cashback) {
+    throw new Error(
+      "--cashback is no longer supported: Pump SDK 2 rejects new cashback coins on-chain (6082 CashbackDeprecated). " +
+        "Use --holder-reward to route creator fees to holders instead.",
+    );
+  }
+  const holderReward = Boolean(values["holder-reward"]);
   const tokenizedAgent = Boolean(values["tokenized-agent"]);
   const buybackBps = values["buyback-bps"] != null
     ? parsePositiveInt(values["buyback-bps"], DEFAULT_BUYBACK_BPS)
@@ -140,6 +149,12 @@ async function main() {
     onlineSdk.fetchFeeConfig(),
   ]);
 
+  if (holderReward && !global.isHolderRewardEnabled) {
+    throw new Error(
+      "Holder-reward launches are not enabled on this cluster yet (Global.isHolderRewardEnabled is false, the program would fail with 6084). Launch without --holder-reward or retry once pump.fun enables it.",
+    );
+  }
+
   let addressLookupTableAccounts = [];
   if (altAddressStr) {
     const altAccount = await connection.getAddressLookupTable(new PublicKey(altAddressStr));
@@ -171,7 +186,7 @@ async function main() {
     amount: tokenAmount,
     solAmount,
     mayhemMode,
-    cashback,
+    holderReward,
   });
 
   if (tokenizedAgent) {
@@ -210,7 +225,8 @@ async function main() {
     quoteTokenAmount: tokenAmount.toString(),
     solLamports,
     mayhemMode,
-    cashback,
+    holderReward,
+    ...(holderReward ? { holderRewardsPda: holderRewardsPda(mint).toBase58() } : {}),
     tokenizedAgent,
     ...(tokenizedAgent ? { buybackBps } : {}),
     frontRunnerProtection,

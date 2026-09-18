@@ -32,6 +32,14 @@ async function loadCore() {
 	return { pump, web3, BN, splToken };
 }
 
+// create_v2 mints live under Token-2022 and legacy ones under SPL Token, so the
+// user's ATA and the trade accounts must be derived with the mint's owner.
+async function mintTokenProgram(connection, mint) {
+	const info = await connection.getAccountInfo(mint);
+	if (!info) throw new Error(`mint ${mint.toBase58()} not found`);
+	return info.owner;
+}
+
 async function loadAmm() {
 	const [amm, web3, BN] = await Promise.all([
 		import('@pump-fun/pump-swap-sdk'),
@@ -217,8 +225,20 @@ export function registerPumpFunSkills(skills) {
 
 			if (args.initialBuySol && args.initialBuySol > 0) {
 				const onlineSdk = new pump.OnlinePumpSdk(connection);
-				const global = await onlineSdk.fetchGlobal();
+				const [global, feeConfig] = await Promise.all([
+					onlineSdk.fetchGlobal(),
+					onlineSdk.fetchFeeConfig(),
+				]);
 				const solLamports = new BN(Math.floor(args.initialBuySol * web3.LAMPORTS_PER_SOL));
+				// Quote the dev buy against a fresh curve so the create_v2 buy asks
+				// for the tokens this SOL actually purchases, not zero.
+				const tokenAmount = pump.getBuyTokenAmountFromSolAmount({
+					global,
+					feeConfig,
+					mintSupply: null,
+					bondingCurve: null,
+					amount: solLamports,
+				});
 				instructions = await offline.createV2AndBuyInstructions({
 					global,
 					mint: mintKeypair.publicKey,
@@ -227,7 +247,7 @@ export function registerPumpFunSkills(skills) {
 					uri: args.uri,
 					creator: pubkey,
 					user: pubkey,
-					amount: new BN(0),
+					amount: tokenAmount,
 					solAmount: solLamports,
 					mayhemMode: false,
 				});
@@ -383,7 +403,8 @@ export function registerPumpFunSkills(skills) {
 			const offline = new pump.PumpSdk();
 
 			const global = await onlineSdk.fetchGlobal();
-			const state = await onlineSdk.fetchBuyState(mint, pubkey);
+			const tokenProgram = await mintTokenProgram(connection, mint);
+			const state = await onlineSdk.fetchBuyState(mint, pubkey, tokenProgram);
 			const solLamports = new BN(Math.floor(args.solAmount * web3.LAMPORTS_PER_SOL));
 			const expected = pump.getBuyTokenAmountFromSolAmount({
 				global,
@@ -403,8 +424,7 @@ export function registerPumpFunSkills(skills) {
 				amount: expected,
 				solAmount: solLamports,
 				slippage: slippageBps / 10_000,
-				tokenProgram:
-					web3.TOKEN_PROGRAM_ID || (await import('@solana/spl-token')).TOKEN_PROGRAM_ID,
+				tokenProgram,
 			});
 
 			const sig = await sendIxs({
@@ -489,7 +509,8 @@ export function registerPumpFunSkills(skills) {
 			const onlineSdk = new pump.OnlinePumpSdk(connection);
 			const offline = new pump.PumpSdk();
 			const global = await onlineSdk.fetchGlobal();
-			const state = await onlineSdk.fetchSellState(mint, pubkey);
+			const tokenProgram = await mintTokenProgram(connection, mint);
+			const state = await onlineSdk.fetchSellState(mint, pubkey, tokenProgram);
 
 			const tokenAmount = new BN(args.tokenAmount);
 			const expectedSol = pump.getSellSolAmountFromTokenAmount({
@@ -509,8 +530,9 @@ export function registerPumpFunSkills(skills) {
 				amount: tokenAmount,
 				solAmount: expectedSol,
 				slippage: slippageBps / 10_000,
-				tokenProgram: (await import('@solana/spl-token')).TOKEN_PROGRAM_ID,
-				mayhemMode: false,
+				tokenProgram,
+				mayhemMode: state.bondingCurve.isMayhemMode === true,
+				cashback: state.bondingCurve.isCashbackCoin === true,
 			});
 
 			const sig = await sendIxs({
@@ -553,12 +575,27 @@ export function registerPumpFunSkills(skills) {
 			const mint = new web3.PublicKey(args.mint);
 
 			const curve = await onlineSdk.fetchBondingCurve(mint);
-			const global = await onlineSdk.fetchGlobal();
 			const graduated = !!curve.complete;
-			const marketCap = pump.bondingCurveMarketCap({
-				global,
-				bondingCurve: curve,
-			});
+			// A graduated curve's reserves are drained to zero, so its market cap
+			// comes from the canonical AMM pool instead.
+			let marketCap;
+			if (graduated) {
+				const { amm, BN } = await loadAmm();
+				const onlineAmm = new amm.OnlinePumpAmmSdk(connection);
+				const swapState = await onlineAmm.swapSolanaState(amm.canonicalPumpPoolPda(mint), mint);
+				marketCap = amm.poolMarketCap({
+					baseMintSupply: new BN(swapState.baseMintAccount.supply.toString()),
+					baseReserve: swapState.poolBaseAmount,
+					quoteReserve: swapState.poolQuoteAmount,
+					isMayhemMode: swapState.pool.isMayhemMode === true,
+				});
+			} else {
+				marketCap = pump.bondingCurveMarketCap({
+					mintSupply: curve.tokenTotalSupply,
+					virtualQuoteReserves: curve.virtualQuoteReserves,
+					virtualTokenReserves: curve.virtualTokenReserves,
+				});
+			}
 
 			let userBalance = '0';
 			let owner = null;

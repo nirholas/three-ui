@@ -79,9 +79,9 @@ async function handleGetBondingCurve({ mint, network = 'mainnet' }, env) {
 	}
 	if (!curve) throw rpcError(-32004, 'no bonding curve found for this mint');
 
-	const realSol = BigInt(curve.realSolReserves?.toString?.() ?? '0');
+	const realSol = BigInt(curve.realQuoteReserves?.toString?.() ?? '0');
 	const realToken = BigInt(curve.realTokenReserves?.toString?.() ?? '0');
-	const virtSol = BigInt(curve.virtualSolReserves?.toString?.() ?? '0');
+	const virtSol = BigInt(curve.virtualQuoteReserves?.toString?.() ?? '0');
 	const virtToken = BigInt(curve.virtualTokenReserves?.toString?.() ?? '0');
 	const complete = !!curve.complete;
 	const graduationPercent = complete

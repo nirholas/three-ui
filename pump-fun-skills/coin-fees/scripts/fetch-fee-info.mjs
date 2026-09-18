@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Resolve fee destination for a coin: cashback, sharing_config, or creator.
+ * Resolve fee destination for a coin: cashback, holder_reward, sharing_config, or creator.
  * Reports vault balances, sharing config shareholders, and graduation status.
  */
 import BN from "bn.js";
@@ -11,7 +11,7 @@ import {
   canonicalPumpPoolPda,
   creatorVaultPda,
   feeSharingConfigPda,
-  isCreatorUsingSharingConfig,
+  hasCoinCreatorMigratedToSharingConfig,
 } from "@pump-fun/pump-sdk";
 import {
   OnlinePumpAmmSdk,
@@ -103,11 +103,12 @@ async function main() {
 
   const effectiveCreator = poolCoinCreator ?? new PublicKey(bondingCurve.creator);
 
+  const isHolderRewardCoin = bondingCurve.isHolderReward === true;
   let hasSharingConfig = false;
   let sharingConfigInfo = null;
 
-  if (!isCashbackCoin) {
-    hasSharingConfig = isCreatorUsingSharingConfig({
+  if (!isCashbackCoin && !isHolderRewardCoin) {
+    hasSharingConfig = hasCoinCreatorMigratedToSharingConfig({
       mint,
       creator: effectiveCreator,
     });
@@ -138,6 +139,8 @@ async function main() {
   let feeDestination;
   if (isCashbackCoin) {
     feeDestination = "cashback";
+  } else if (isHolderRewardCoin) {
+    feeDestination = "holder_reward";
   } else if (hasSharingConfig) {
     feeDestination = "sharing_config";
   } else {
@@ -194,6 +197,7 @@ async function main() {
     pool: poolAddress,
     isGraduated,
     isCashbackCoin,
+    isHolderRewardCoin,
     hasSharingConfig,
     creator: effectiveCreator.toBase58(),
     creatorVaultLamports,

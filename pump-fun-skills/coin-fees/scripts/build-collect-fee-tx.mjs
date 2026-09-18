@@ -11,7 +11,7 @@ import {
   bondingCurvePda,
   canonicalPumpPoolPda,
   feeSharingConfigPda,
-  isCreatorUsingSharingConfig,
+  hasCoinCreatorMigratedToSharingConfig,
 } from "@pump-fun/pump-sdk";
 import { OnlinePumpAmmSdk } from "@pump-fun/pump-swap-sdk";
 import { PublicKey } from "@solana/web3.js";
@@ -136,9 +136,16 @@ async function main() {
       );
     }
 
+    if (bondingCurve.isHolderReward === true) {
+      throw new Error(
+        "This is a holder-reward coin: its creator is the holder-rewards PDA and every creator fee is paid out to holders " +
+        "by pump.fun through distribute_fee_to_holders. There is no creator vault for the launcher to collect.",
+      );
+    }
+
     // Check for sharing config
     if (
-      isCreatorUsingSharingConfig({ mint, creator })
+      hasCoinCreatorMigratedToSharingConfig({ mint, creator })
     ) {
       throw new Error(
         "This coin uses a fee sharing config. Use build-distribute-fees-tx.mjs instead.",

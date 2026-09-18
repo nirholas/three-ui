@@ -70,6 +70,14 @@ const buyBodySchema = z.object({
 	network: z.enum(['mainnet', 'devnet']).default('mainnet'),
 });
 
+// create_v2 mints live under Token-2022 and legacy ones under SPL Token, so the
+// user's ATA and the trade accounts must be derived with the mint's owner.
+async function mintTokenProgram(conn, mint) {
+	const info = await conn.getAccountInfo(mint);
+	if (!info) throw new Error(`mint ${mint.toBase58()} not found`);
+	return info.owner;
+}
+
 async function handleBuy(req, res, id) {
 	if (cors(req, res, { methods: 'POST,OPTIONS', credentials: true })) return;
 	if (!method(req, res, ['POST'])) return;
@@ -98,12 +106,10 @@ async function handleBuy(req, res, id) {
 	});
 	if (blocked) return error(res, blocked.status, blocked.code, blocked.msg);
 
-	const [{ PumpSdk, OnlinePumpSdk, getBuyTokenAmountFromSolAmount }, BN, splToken] =
-		await Promise.all([
-			import('@pump-fun/pump-sdk'),
-			import('bn.js').then((m) => m.default || m),
-			import('@solana/spl-token'),
-		]);
+	const [{ PumpSdk, OnlinePumpSdk, getBuyTokenAmountFromSolAmount }, BN] = await Promise.all([
+		import('@pump-fun/pump-sdk'),
+		import('bn.js').then((m) => m.default || m),
+	]);
 
 	const conn = solanaConnection(body.network);
 	const online = new OnlinePumpSdk(conn);
@@ -113,9 +119,10 @@ async function handleBuy(req, res, id) {
 
 	let instructions;
 	try {
+		const tokenProgram = await mintTokenProgram(conn, mint);
 		const [global, state] = await Promise.all([
 			online.fetchGlobal(),
-			online.fetchBuyState(mint, keypair.publicKey),
+			online.fetchBuyState(mint, keypair.publicKey, tokenProgram),
 		]);
 		const expected = getBuyTokenAmountFromSolAmount({
 			global,
@@ -134,7 +141,7 @@ async function handleBuy(req, res, id) {
 			amount: expected,
 			solAmount: solLamports,
 			slippage: body.slippageBps / 10_000,
-			tokenProgram: splToken.TOKEN_PROGRAM_ID,
+			tokenProgram,
 		});
 	} catch (err) {
 		console.error('[pumpfun/buy] build failed', err);
@@ -816,12 +823,10 @@ async function handleSell(req, res, id) {
 	if (loaded.error) return error(res, loaded.error.status, loaded.error.code, loaded.error.msg);
 	const { keypair } = loaded;
 
-	const [{ PumpSdk, OnlinePumpSdk, getSellSolAmountFromTokenAmount }, BN, splToken] =
-		await Promise.all([
-			import('@pump-fun/pump-sdk'),
-			import('bn.js').then((m) => m.default || m),
-			import('@solana/spl-token'),
-		]);
+	const [{ PumpSdk, OnlinePumpSdk, getSellSolAmountFromTokenAmount }, BN] = await Promise.all([
+		import('@pump-fun/pump-sdk'),
+		import('bn.js').then((m) => m.default || m),
+	]);
 
 	const conn = solanaConnection(body.network);
 	const online = new OnlinePumpSdk(conn);
@@ -832,9 +837,10 @@ async function handleSell(req, res, id) {
 	let instructions;
 	let expectedSolStr;
 	try {
+		const tokenProgram = await mintTokenProgram(conn, mint);
 		const [global, state] = await Promise.all([
 			online.fetchGlobal(),
-			online.fetchSellState(mint, keypair.publicKey),
+			online.fetchSellState(mint, keypair.publicKey, tokenProgram),
 		]);
 		const expectedSol = getSellSolAmountFromTokenAmount({
 			global,
@@ -853,8 +859,9 @@ async function handleSell(req, res, id) {
 			amount: tokenAmount,
 			solAmount: expectedSol,
 			slippage: body.slippageBps / 10_000,
-			tokenProgram: splToken.TOKEN_PROGRAM_ID,
-			mayhemMode: false,
+			tokenProgram,
+			mayhemMode: state.bondingCurve.isMayhemMode === true,
+			cashback: state.bondingCurve.isCashbackCoin === true,
 		});
 	} catch (err) {
 		console.error('[pumpfun/sell] build failed', err);

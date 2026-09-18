@@ -49,9 +49,9 @@ async function handleGetBondingCurve({ mint, network = 'mainnet' }) {
 	}
 	if (!curve) throw rpcError(-32004, 'no bonding curve found for this mint');
 
-	const realSol = BigInt(curve.realSolReserves?.toString?.() ?? '0');
+	const realSol = BigInt(curve.realQuoteReserves?.toString?.() ?? '0');
 	const realToken = BigInt(curve.realTokenReserves?.toString?.() ?? '0');
-	const virtSol = BigInt(curve.virtualSolReserves?.toString?.() ?? '0');
+	const virtSol = BigInt(curve.virtualQuoteReserves?.toString?.() ?? '0');
 	const virtToken = BigInt(curve.virtualTokenReserves?.toString?.() ?? '0');
 	const complete = !!curve.complete;
 	// Graduation % heuristic: complete=100, else realSol/graduationTarget * 100.
@@ -443,9 +443,9 @@ async function handleSocialXPostImpact({ postUrl, mint, windowMin = 30, network 
 	}
 	if (!curve) throw rpcError(-32004, 'no bonding curve found for this mint');
 
-	const virtSol = Number(curve.virtualSolReserves?.toString?.() ?? '0');
+	const virtSol = Number(curve.virtualQuoteReserves?.toString?.() ?? '0');
 	const virtToken = Number(curve.virtualTokenReserves?.toString?.() ?? '0');
-	const realSolLamports = Number(curve.realSolReserves?.toString?.() ?? '0');
+	const realSolLamports = Number(curve.realQuoteReserves?.toString?.() ?? '0');
 	const priceRaw = virtToken > 0 ? virtSol / virtToken : null;
 	const volSol = realSolLamports / 1e9;
 

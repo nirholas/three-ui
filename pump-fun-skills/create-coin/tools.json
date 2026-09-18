@@ -13,7 +13,6 @@
           "uri": { "type": "string", "description": "Metadata URI (IPFS or HTTPS JSON)" },
           "solLamports": { "type": "string", "description": "Initial buy amount in lamports" },
           "mayhemMode": { "type": "boolean", "description": "Enable mayhem mode (default false)" },
-          "cashback": { "type": "boolean", "description": "Enable cashback (default false)" },
           "tokenizedAgent": {
             "type": "boolean",
             "description": "Create as a tokenized agent (default false)"
