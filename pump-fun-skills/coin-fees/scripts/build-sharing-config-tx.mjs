@@ -9,6 +9,10 @@
  *
  * Auto-detects mode based on whether a sharing config already exists on-chain.
  * Use --mode create|update to force a specific mode.
+ *
+ * Creator fees still on the bonding curve or pool (left there by v3 /
+ * PumpSwap v2 trades) are swept into the current creator vault first: creating
+ * or updating a config is refused while they sit there (CreatorFeesNotSwept).
  */
 import { parseArgs } from "node:util";
 import {
@@ -30,8 +34,11 @@ import {
   requirePublicKey,
 } from "./lib/args.mjs";
 import { buildAndPartialSignTx, transactionToBase64 } from "./lib/tx-build.mjs";
+import { coinCreatorFeeSweeps } from "./lib/sweep.mjs";
 
-const DEFAULT_COMPUTE_UNITS = 200_000;
+// Sweeps + create + curve-creator migration + update + distribute measured
+// about 198k CU on mainnet for an ungraduated coin; a pool sweep adds more.
+const DEFAULT_COMPUTE_UNITS = 400_000;
 
 const HELP = `Usage: node scripts/build-sharing-config-tx.mjs [options]
 
@@ -245,7 +252,9 @@ async function main() {
     );
   }
 
-  const instructions = [];
+  // Empty the curve and pool creator-fee buckets first (6095 / 6033 otherwise)
+  const sweeps = await coinCreatorFeeSweeps(connection, { mint, payer: user });
+  const instructions = [...sweeps.instructions];
 
   if (mode === "create") {
     // Create sharing config — creator must sign
@@ -316,6 +325,7 @@ async function main() {
       percent: `${(s.shareBps / 100).toFixed(2)}%`,
     })),
     isGraduated,
+    swept: sweeps.swept,
     frontRunnerProtection,
   });
 }

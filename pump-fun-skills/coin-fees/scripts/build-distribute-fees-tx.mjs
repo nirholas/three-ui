@@ -4,8 +4,10 @@
  * (The API auto-detects sharing config vs direct collect.)
  *
  * Build a transaction to distribute creator fees when a sharing config exists.
- * If graduated: transferCreatorFeesToPump + distributeCreatorFees.
- * If not graduated: distributeCreatorFees only.
+ * Any creator fees still on the bonding curve or pool (left there by v3 /
+ * PumpSwap v2 trades) are swept first: distribution is refused while they sit there.
+ * If graduated: sweeps + transferCreatorFeesToPump + distributeCreatorFees.
+ * If not graduated: sweeps + distributeCreatorFees.
  */
 import { parseArgs } from "node:util";
 import {
@@ -37,8 +39,10 @@ import {
   requirePublicKey,
 } from "./lib/args.mjs";
 import { buildAndPartialSignTx, transactionToBase64 } from "./lib/tx-build.mjs";
+import { coinCreatorFeeSweeps } from "./lib/sweep.mjs";
 
-const DISTRIBUTE_FEE_DEFAULT_UNITS = 200_000;
+// Up to two sweeps, the AMM consolidation and a ten-shareholder distribution.
+const DISTRIBUTE_FEE_DEFAULT_UNITS = 300_000;
 
 const HELP = `Usage: node scripts/build-distribute-fees-tx.mjs [options]
 
@@ -131,8 +135,9 @@ async function main() {
 
   const sharingConfig = PUMP_SDK.decodeSharingConfig(sharingConfigAccountInfo);
 
-  // Build instructions
-  const instructions = [];
+  // Build instructions: empty the curve and pool buckets first
+  const sweeps = await coinCreatorFeeSweeps(connection, { mint, payer: user });
+  const instructions = [...sweeps.instructions];
 
   if (isGraduated) {
     const pumpAmmProgram = getPumpAmmProgram(connection);
@@ -190,6 +195,7 @@ async function main() {
     sharingConfigAddress: sharingConfigAddress.toBase58(),
     shareholderCount: sharingConfig.shareholders.length,
     isGraduated,
+    swept: sweeps.swept,
     frontRunnerProtection,
   });
 }

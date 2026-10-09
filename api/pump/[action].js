@@ -44,6 +44,7 @@ import {
 	buildUnsignedTxBase64,
 	verifySignature,
 	solanaPubkey,
+	slippagePercentFromBps,
 } from '../_lib/pump.js';
 import { solanaConnection } from '../_lib/agent-pumpfun.js';
 import { connectPumpFunFeed } from '../_lib/pumpfun-ws-feed.js';
@@ -182,30 +183,61 @@ async function handleBuyPrep(req, res) {
 	if (!userPk || !mintPk) return error(res, 400, 'validation_error', 'invalid pubkeys');
 
 	try {
-		const { sdk, BN, web3 } = await getPumpSdk({ network: body.network });
+		const { sdk, BN, web3, connection } = await getPumpSdk({ network: body.network });
+		const { getBuyTokenAmountFromSolAmount, isLegacyQuoteMint } = await import('@pump-fun/pump-sdk');
 		const lamports = new BN(Math.floor(body.sol * web3.LAMPORTS_PER_SOL));
-		const slippage = body.slippage_bps / 10_000;
+		// @pump-fun SDK builders take slippage as a PERCENT (1 = 1%).
+		const slippage = slippagePercentFromBps(body.slippage_bps);
 
-		// Try bonding curve.
+		// Try bonding curve. The mint's owner is the base token program
+		// (Token-2022 for create_v2 coins), which the user-ATA lookup needs.
+		const mintInfo = await connection.getAccountInfo(mintPk);
+		if (!mintInfo) return error(res, 404, 'mint_not_found', `mint ${body.mint} not found on ${body.network}`);
+		const tokenProgram = mintInfo.owner;
 		let buyState = null;
 		try {
-			if (sdk.fetchBuyState) buyState = await sdk.fetchBuyState(mintPk, userPk);
+			buyState = await sdk.fetchBuyState(mintPk, userPk, tokenProgram);
 		} catch {
 			buyState = null;
 		}
 
 		if (buyState && buyState.bondingCurve && !buyState.bondingCurve.complete) {
-			const global = await sdk.fetchGlobal();
-			const ixs = await sdk.buyInstructions({
+			if (!isLegacyQuoteMint(buyState.quoteMint)) {
+				return error(
+					res,
+					422,
+					'unsupported_quote_mint',
+					`this coin trades against ${buyState.quoteMint.toBase58()}, not SOL`,
+				);
+			}
+			const [global, feeConfig] = await Promise.all([
+				sdk.fetchGlobal(),
+				sdk.fetchFeeConfig().catch(() => null),
+			]);
+			// buy_v2's `amount` is the base-token quantity and must be > 0:
+			// derive it from the SOL input.
+			const tokenAmount = getBuyTokenAmountFromSolAmount({
+				global,
+				feeConfig,
+				mintSupply: buyState.bondingCurve.tokenTotalSupply,
+				bondingCurve: buyState.bondingCurve,
+				amount: lamports,
+				quoteMint: buyState.quoteMint,
+			});
+			if (!tokenAmount.gt(new BN(0)))
+				return error(res, 400, 'amount_too_small', 'sol amount too small to buy any tokens');
+			const ixs = await sdk.buyV2Instructions({
 				global,
 				bondingCurveAccountInfo: buyState.bondingCurveAccountInfo,
 				bondingCurve: buyState.bondingCurve,
 				associatedUserAccountInfo: buyState.associatedUserAccountInfo,
 				mint: mintPk,
 				user: userPk,
-				amount: new BN(0),
-				solAmount: lamports,
+				amount: tokenAmount,
+				quoteAmount: lamports,
 				slippage,
+				tokenProgram,
+				quoteTokenProgram: buyState.quoteTokenProgram,
 			});
 			const tx_base64 = await buildUnsignedTxBase64({
 				network: body.network,
@@ -341,28 +373,55 @@ async function handleSellPrep(req, res) {
 	if (!userPk || !mintPk) return error(res, 400, 'validation_error', 'invalid pubkeys');
 
 	try {
-		const { sdk, BN } = await getPumpSdk({ network: body.network });
+		const { sdk, BN, connection } = await getPumpSdk({ network: body.network });
+		const { getSellSolAmountFromTokenAmount, isLegacyQuoteMint } = await import('@pump-fun/pump-sdk');
 		const tokens = new BN(body.tokens);
-		const slippage = body.slippage_bps / 10_000;
+		// @pump-fun SDK builders take slippage as a PERCENT (1 = 1%).
+		const slippage = slippagePercentFromBps(body.slippage_bps);
 
+		const mintInfo = await connection.getAccountInfo(mintPk);
+		if (!mintInfo) return error(res, 404, 'mint_not_found', `mint ${body.mint} not found on ${body.network}`);
+		const tokenProgram = mintInfo.owner;
 		let sellState = null;
 		try {
-			if (sdk.fetchSellState) sellState = await sdk.fetchSellState(mintPk, userPk);
+			sellState = await sdk.fetchSellState(mintPk, userPk, tokenProgram);
 		} catch {
 			sellState = null;
 		}
 
 		if (sellState && sellState.bondingCurve && !sellState.bondingCurve.complete) {
-			const global = await sdk.fetchGlobal();
-			const ixs = await sdk.sellInstructions({
+			if (!isLegacyQuoteMint(sellState.quoteMint)) {
+				return error(
+					res,
+					422,
+					'unsupported_quote_mint',
+					`this coin trades against ${sellState.quoteMint.toBase58()}, not SOL`,
+				);
+			}
+			const [global, feeConfig] = await Promise.all([
+				sdk.fetchGlobal(),
+				sdk.fetchFeeConfig().catch(() => null),
+			]);
+			// sell_v2 floors the proceeds at `quoteAmount` less slippage, so quote
+			// it from the curve instead of passing 0 (which accepts any price).
+			const quoteAmount = getSellSolAmountFromTokenAmount({
+				global,
+				feeConfig,
+				mintSupply: sellState.bondingCurve.tokenTotalSupply,
+				bondingCurve: sellState.bondingCurve,
+				amount: tokens,
+			});
+			const ixs = await sdk.sellV2Instructions({
 				global,
 				bondingCurveAccountInfo: sellState.bondingCurveAccountInfo,
 				bondingCurve: sellState.bondingCurve,
 				mint: mintPk,
 				user: userPk,
 				amount: tokens,
-				solAmount: new BN(0),
+				quoteAmount,
 				slippage,
+				tokenProgram,
+				quoteTokenProgram: sellState.quoteTokenProgram,
 			});
 			const tx_base64 = await buildUnsignedTxBase64({
 				network: body.network,
@@ -1131,7 +1190,7 @@ async function handleQuote(req, res) {
 	const slippageBps = Number.isFinite(Number(slippageRaw))
 		? Math.max(0, Math.min(5000, Number(slippageRaw)))
 		: 100;
-	const slippage = slippageBps / 10_000;
+	const slippage = slippagePercentFromBps(slippageBps);
 
 	const mint = solanaPubkey(mintStr);
 	if (!mint) return error(res, 400, 'validation_error', 'invalid mint');
@@ -1227,6 +1286,8 @@ async function handleQuote(req, res) {
 			baseMintAccount,
 			globalConfig,
 			feeConfig,
+			poolQuoteArgs,
+			feeBucketsTotal,
 		} = amm;
 		const LAMPORTS_PER_SOL_AMM = 1_000_000_000;
 		const ammSdk = await import('@pump-fun/pump-swap-sdk');
@@ -1247,6 +1308,7 @@ async function handleQuote(req, res) {
 				coinCreator: pool.coinCreator,
 				creator: pool.creator,
 				feeConfig,
+				...poolQuoteArgs,
 			});
 			quote = {
 				sol_in: sol,
@@ -1268,6 +1330,8 @@ async function handleQuote(req, res) {
 				coinCreator: pool.coinCreator,
 				creator: pool.creator,
 				feeConfig,
+				...poolQuoteArgs,
+				feeBucketsTotal,
 			});
 			const lamportsOut = r.quote ?? r.uiQuote ?? r.minQuote;
 			quote = {

@@ -22,6 +22,14 @@ import { detectSolanaWallet, SOLANA_RPC } from './erc8004/solana-deploy.js';
 const DEFAULT_NETWORK = 'mainnet';
 const DEFAULT_SLIPPAGE_BPS = 500;
 
+// Every @pump-fun SDK builder takes slippage as a PERCENT (`slippage: 1` = 1%):
+// pump-sdk pads via `amount * floor(slippage * 10) / 1000`, pump-swap-sdk via
+// `1 ± slippage / 100`. Convert user-facing bps accordingly (100 bps -> 1).
+function slippagePct(bps) {
+	const n = Number(bps);
+	return Math.max(0, Math.min(10_000, Number.isFinite(n) ? n : DEFAULT_SLIPPAGE_BPS)) / 100;
+}
+
 async function loadCore() {
 	const [pump, web3, BN, splToken] = await Promise.all([
 		import('@pump-fun/pump-sdk'),
@@ -423,7 +431,7 @@ export function registerPumpFunSkills(skills) {
 				user: pubkey,
 				amount: expected,
 				solAmount: solLamports,
-				slippage: slippageBps / 10_000,
+				slippage: slippagePct(slippageBps),
 				tokenProgram,
 			});
 
@@ -529,7 +537,7 @@ export function registerPumpFunSkills(skills) {
 				user: pubkey,
 				amount: tokenAmount,
 				solAmount: expectedSol,
-				slippage: slippageBps / 10_000,
+				slippage: slippagePct(slippageBps),
 				tokenProgram,
 				mayhemMode: state.bondingCurve.isMayhemMode === true,
 				cashback: state.bondingCurve.isCashbackCoin === true,
@@ -647,29 +655,28 @@ export function registerPumpFunSkills(skills) {
 		},
 		handler: async (args, _ctx) => {
 			const network = args.network || DEFAULT_NETWORK;
-			const slippage = (args.slippageBps ?? DEFAULT_SLIPPAGE_BPS) / 10_000;
 			const { amm, web3, BN } = await loadAmm();
 			const { wallet, pubkey } = await requireWallet();
 			const connection = getConnection(web3, network);
 
 			const mint = new web3.PublicKey(args.mint);
-			const sdk = new amm.OnlinePumpAmmSdk(connection);
+			const online = new amm.OnlinePumpAmmSdk(connection);
+			const offline = new amm.PumpAmmSdk();
 			const solLamports = new BN(Math.floor(args.solAmount * web3.LAMPORTS_PER_SOL));
 
-			const ixs = await sdk.swapAutocompleteBaseFromQuote({
-				pool: amm.canonicalPumpPoolPda(mint)[0],
-				quote: solLamports,
-				slippage,
-				direction: 'quoteToBase',
-				user: pubkey,
-			});
+			// canonicalPumpPoolPda returns the pool PublicKey directly (keyed to
+			// the wSOL quote; this skill is SOL-denominated). swapSolanaState carries
+			// the pool's signed virtual quote reserves, which the quote adds in.
+			const poolKey = amm.canonicalPumpPoolPda(mint);
+			const swapState = await online.swapSolanaState(poolKey, pubkey);
+			const ixs = await offline.buyQuoteInput(swapState, solLamports, slippagePct(args.slippageBps));
 
 			const sig = await sendIxs({
 				web3,
 				connection,
 				wallet,
 				payer: pubkey,
-				instructions: Array.isArray(ixs) ? ixs : ixs.instructions || [],
+				instructions: ixs,
 			});
 
 			return {
@@ -701,29 +708,25 @@ export function registerPumpFunSkills(skills) {
 		},
 		handler: async (args, _ctx) => {
 			const network = args.network || DEFAULT_NETWORK;
-			const slippage = (args.slippageBps ?? DEFAULT_SLIPPAGE_BPS) / 10_000;
 			const { amm, web3, BN } = await loadAmm();
 			const { wallet, pubkey } = await requireWallet();
 			const connection = getConnection(web3, network);
 
 			const mint = new web3.PublicKey(args.mint);
-			const sdk = new amm.OnlinePumpAmmSdk(connection);
+			const online = new amm.OnlinePumpAmmSdk(connection);
+			const offline = new amm.PumpAmmSdk();
 			const tokenAmount = new BN(args.tokenAmount);
 
-			const ixs = await sdk.swapAutocompleteQuoteFromBase({
-				pool: amm.canonicalPumpPoolPda(mint)[0],
-				base: tokenAmount,
-				slippage,
-				direction: 'baseToQuote',
-				user: pubkey,
-			});
+			const poolKey = amm.canonicalPumpPoolPda(mint);
+			const swapState = await online.swapSolanaState(poolKey, pubkey);
+			const ixs = await offline.sellBaseInput(swapState, tokenAmount, slippagePct(args.slippageBps));
 
 			const sig = await sendIxs({
 				web3,
 				connection,
 				wallet,
 				payer: pubkey,
-				instructions: Array.isArray(ixs) ? ixs : ixs.instructions || [],
+				instructions: ixs,
 			});
 
 			return {
@@ -740,23 +743,44 @@ export function registerPumpFunSkills(skills) {
 		name: 'pumpfun-claim-fees',
 		description:
 			'Claim accumulated creator fees from the agent-creator vault to the agent owner wallet.',
-		instruction: 'Calls collectCoinCreatorFeeInstructions on OnlinePumpSdk.',
+		instruction:
+			'Sweeps the fees v3 / PumpSwap v2 trades left on the given coins\' curves and pools, then calls collectCoinCreatorFeeInstructions on OnlinePumpSdk.',
 		animationHint: 'celebrate',
 		voicePattern: 'Claiming creator fees…',
 		mcpExposed: true,
 		inputSchema: {
 			type: 'object',
-			properties: { network: { type: 'string', enum: ['mainnet', 'devnet'] } },
+			properties: {
+				network: { type: 'string', enum: ['mainnet', 'devnet'] },
+				mints: {
+					type: 'array',
+					items: { type: 'string' },
+					maxItems: 20,
+					description: 'Coins this wallet created. Their creator fees still on the curve or pool are swept in first.',
+				},
+			},
 		},
 		handler: async (args, _ctx) => {
 			const network = args.network || DEFAULT_NETWORK;
 			const { pump, web3 } = await loadCore();
 			const { wallet, pubkey } = await requireWallet();
 			const connection = getConnection(web3, network);
+			const creator = pubkey.toBase58();
+			const { readCreatorFeeBuckets, unsweptCreatorFees, creatorFeeSweepInstructions } = await import(
+				'./solana/pump-creator-sweep.js'
+			);
+			const mints = (Array.isArray(args.mints) ? args.mints : []).filter((m) => typeof m === 'string' && m.length >= 32);
+			// SOL legs only: the collect below claims the SOL creator vaults.
+			const legs = mints.length
+				? unsweptCreatorFees((await readCreatorFeeBuckets(connection, mints)).values(), creator).filter(
+						(l) => l.quoteMint === 'So11111111111111111111111111111111111111112',
+					)
+				: [];
+			const unswept = legs.reduce((sum, l) => sum + l.amount, 0n);
 
 			const onlineSdk = new pump.OnlinePumpSdk(connection);
-			const balance = await onlineSdk.getCreatorVaultBalanceBothPrograms(pubkey);
-			if (balance.isZero?.() || balance.toString() === '0') {
+			const vault = BigInt((await onlineSdk.getCreatorVaultBalanceBothPrograms(pubkey)).toString());
+			if (vault + unswept === 0n) {
 				return {
 					success: true,
 					output: 'No creator fees to claim right now.',
@@ -765,19 +789,21 @@ export function registerPumpFunSkills(skills) {
 				};
 			}
 
+			const { instructions: sweeps, swept } = await creatorFeeSweepInstructions(connection, { legs, payer: pubkey });
+			const claimed = vault + swept.reduce((sum, l) => sum + l.amount, 0n);
 			const ixs = await onlineSdk.collectCoinCreatorFeeInstructions(pubkey, pubkey);
 			const sig = await sendIxs({
 				web3,
 				connection,
 				wallet,
 				payer: pubkey,
-				instructions: ixs,
+				instructions: [...sweeps, ...ixs],
 			});
 			return {
 				success: true,
-				output: `Claimed ${balance.toString()} lamports of creator fees.`,
+				output: `Claimed ${claimed.toString()} lamports of creator fees.`,
 				sentiment: 0.8,
-				data: { signature: sig, lamports: balance.toString(), network },
+				data: { signature: sig, lamports: claimed.toString(), swept: swept.length, network },
 			};
 		},
 	});

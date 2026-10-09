@@ -18,7 +18,7 @@
 
 import { cors, json, method, wrap, readJson, error } from './_lib/http.js';
 import { limits, clientIp } from './_lib/rate-limit.js';
-import { getPumpSdk, getConnection, solanaPubkey, getAmmPoolState } from './_lib/pump.js';
+import { getPumpSdk, getConnection, solanaPubkey, getAmmPoolState, slippagePercentFromBps } from './_lib/pump.js';
 import { pumpfunMcp, pumpfunBotEnabled } from './_lib/pumpfun-mcp.js';
 import { getRadarSignals } from '../src/kol/radar.js';
 import { TOOLS, rpcError, rpcEnvelope } from '../src/pump/mcp-tools.js';
@@ -369,9 +369,20 @@ async function handleQuoteSwap({ inputMint, outputMint, amountIn, slippageBps, n
 	const { buyQuoteInput, sellBaseInput } = await import('@pump-fun/pump-swap-sdk');
 	const BNMod = await import('bn.js');
 	const BN = BNMod.default || BNMod;
-	const { poolKey, pool, baseReserve, quoteReserve, baseMintAccount, globalConfig, feeConfig } = state;
+	const {
+		poolKey,
+		pool,
+		baseReserve,
+		quoteReserve,
+		effectiveQuoteReserve,
+		feeBucketsTotal,
+		poolQuoteArgs,
+		baseMintAccount,
+		globalConfig,
+		feeConfig,
+	} = state;
 	const amountBn = new BN(String(amountIn));
-	const slip = (slippageBps ?? 100) / 10_000;
+	const slip = slippagePercentFromBps(slippageBps ?? 100);
 	const shared = {
 		slippage: slip,
 		baseReserve,
@@ -382,18 +393,22 @@ async function handleQuoteSwap({ inputMint, outputMint, amountIn, slippageBps, n
 		coinCreator: pool.coinCreator,
 		creator: pool.creator,
 		feeConfig,
+		...poolQuoteArgs,
 	};
+	// Spot-price math prices against the effective (vault + signed virtual)
+	// quote reserve; the SDK calls above take the raw reserve plus the virtual
+	// part separately.
 	let amountOut, priceImpactBps;
 	if (inputMint === WSOL) {
 		const r = buyQuoteInput({ quote: amountBn, ...shared });
 		amountOut = r.base;
 		const num = amountBn.mul(baseReserve);
-		const denom = amountOut.mul(quoteReserve);
+		const denom = amountOut.mul(effectiveQuoteReserve);
 		priceImpactBps = denom.isZero() ? 0 : Math.max(0, num.muln(10_000).div(denom).subn(10_000).toNumber());
 	} else {
-		const r = sellBaseInput({ base: amountBn, ...shared });
+		const r = sellBaseInput({ base: amountBn, ...shared, feeBucketsTotal });
 		amountOut = r.uiQuote;
-		const spot = quoteReserve.mul(amountBn);
+		const spot = effectiveQuoteReserve.mul(amountBn);
 		const exec = amountOut.mul(baseReserve);
 		priceImpactBps = spot.isZero() ? 0 : Math.max(0, spot.sub(exec).muln(10_000).div(spot).toNumber());
 	}

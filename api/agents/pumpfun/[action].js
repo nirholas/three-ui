@@ -19,6 +19,7 @@ import { loadAgentForSigning, solanaConnection } from '../../_lib/agent-pumpfun.
 import { checkBuyAllowed } from '../../_lib/agent-spend-policy.js';
 import { grindMintKeypair } from '../../_lib/pump-vanity.js';
 import { sql } from '../../_lib/db.js';
+import { slippagePercentFromBps } from '../../_lib/pump.js';
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { z } from 'zod';
 
@@ -140,7 +141,7 @@ async function handleBuy(req, res, id) {
 			user: keypair.publicKey,
 			amount: expected,
 			solAmount: solLamports,
-			slippage: body.slippageBps / 10_000,
+			slippage: slippagePercentFromBps(body.slippageBps),
 			tokenProgram,
 		});
 	} catch (err) {
@@ -683,7 +684,6 @@ async function handlePortfolio(req, res, id) {
 		]);
 	const online = new OnlinePumpSdk(conn);
 	const onlineAmm = new ammMod.OnlinePumpAmmSdk(conn);
-	const ammSdk = new ammMod.PumpAmmSdk();
 	let global;
 	try {
 		global = await online.fetchGlobal();
@@ -735,23 +735,30 @@ async function handlePortfolio(req, res, id) {
 					try {
 						const poolKey = ammMod.canonicalPumpPoolPda(mintPk);
 						const swapState = await onlineAmm.swapSolanaState(poolKey, keypair.publicKey);
-						const result = ammSdk.sellAutocompleteQuoteFromBase
-							? ammSdk.sellAutocompleteQuoteFromBase(swapState, new BN(out.token_balance), 0)
-							: null;
-						if (result && result.uiQuote != null) {
-							out.estimated_sol_value = lamportsToSol(result.uiQuote);
-						} else {
-							const pool = swapState.pool;
-							const baseReserve = pool.baseReserve || pool.virtualBaseReserves;
-							const quoteReserve = pool.quoteReserve || pool.virtualQuoteReserves;
-							if (baseReserve && quoteReserve) {
-								const bal = new BN(out.token_balance);
-								const out_q = bal.mul(quoteReserve).div(baseReserve.add(bal));
-								out.estimated_sol_value = lamportsToSol(out_q);
-							} else {
-								out.estimated_sol_value = null;
-							}
-						}
+						// sellBaseInput takes the raw vault balance plus the pool's
+						// signed virtual quote reserves (added internally) and pays
+						// sells only from the vault less the unswept v2 fee buckets.
+						const { pool } = swapState;
+						const result = ammMod.sellBaseInput({
+							base: new BN(out.token_balance),
+							slippage: 0,
+							baseReserve: swapState.poolBaseAmount,
+							quoteReserve: swapState.poolQuoteAmount,
+							virtualQuoteReserves: pool.virtualQuoteReserves,
+							feeBucketsTotal: new BN((pool.protocolFees ?? 0).toString()).add(
+								new BN((pool.creatorFees ?? 0).toString()),
+							),
+							globalConfig: swapState.globalConfig,
+							baseMintAccount: swapState.baseMintAccount,
+							baseMint: pool.baseMint,
+							coinCreator: pool.coinCreator,
+							creator: pool.creator,
+							feeConfig: swapState.feeConfig,
+							quoteMint: pool.quoteMint,
+							isMayhemMode: pool.isMayhemMode === true,
+							creatorFeeBps: pool.creatorFeeBps,
+						});
+						out.estimated_sol_value = lamportsToSol(result.uiQuote);
 						out.venue = 'amm';
 						out.pool = poolKey.toBase58();
 					} catch (e) {
@@ -858,7 +865,7 @@ async function handleSell(req, res, id) {
 			user: keypair.publicKey,
 			amount: tokenAmount,
 			solAmount: expectedSol,
-			slippage: body.slippageBps / 10_000,
+			slippage: slippagePercentFromBps(body.slippageBps),
 			tokenProgram,
 			mayhemMode: state.bondingCurve.isMayhemMode === true,
 			cashback: state.bondingCurve.isCashbackCoin === true,
@@ -1009,7 +1016,8 @@ async function handleSwap(req, res, id) {
 		return online.swapSolanaStateNoPool(poolKey, keypair.publicKey);
 	});
 
-	const slippage = body.slippageBps / 10_000;
+	// @pump-fun SDK builders take slippage as a PERCENT (1 = 1%).
+	const slippage = slippagePercentFromBps(body.slippageBps);
 
 	let instructions;
 	let quotedAmount;

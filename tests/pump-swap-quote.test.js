@@ -61,7 +61,12 @@ describe('quoteSwap', () => {
 		mockSwapSolanaState.mockResolvedValueOnce(fakeState());
 		mockBuyQuoteInput.mockReturnValueOnce({ base: new BN(9_900), maxQuote: new BN(10_200) });
 
-		const result = await quoteSwap({ inputMint: WSOL, outputMint: TOKEN, amountIn: 10_000, slippageBps: 100 });
+		const result = await quoteSwap({
+			inputMint: WSOL,
+			outputMint: TOKEN,
+			amountIn: 10_000,
+			slippageBps: 100,
+		});
 
 		expect(result.amountOut).toBe('9900');
 		expect(typeof result.priceImpactBps).toBe('number');
@@ -80,7 +85,8 @@ describe('quoteSwap', () => {
 		expect(mockBuyQuoteInput).toHaveBeenCalledOnce();
 		const call = mockBuyQuoteInput.mock.calls[0][0];
 		expect(call.quote.toString()).toBe('10000');
-		expect(call.slippage).toBeCloseTo(0.01);
+		// pump-swap-sdk slippage is a PERCENT (1 = 1%): 100 bps -> 1.
+		expect(call.slippage).toBeCloseTo(1);
 		expect(call.globalConfig).toEqual({ mock: true });
 	});
 
@@ -99,7 +105,12 @@ describe('quoteSwap', () => {
 		mockSwapSolanaState.mockResolvedValueOnce(fakeState());
 		mockSellBaseInput.mockReturnValueOnce({ uiQuote: new BN(9_800), minQuote: new BN(9_700) });
 
-		const result = await quoteSwap({ inputMint: TOKEN, outputMint: WSOL, amountIn: 10_000, slippageBps: 50 });
+		const result = await quoteSwap({
+			inputMint: TOKEN,
+			outputMint: WSOL,
+			amountIn: 10_000,
+			slippageBps: 50,
+		});
 
 		expect(result.amountOut).toBe('9800');
 		expect(result.priceImpactBps).toBeGreaterThanOrEqual(0);
@@ -115,7 +126,8 @@ describe('quoteSwap', () => {
 		expect(mockSellBaseInput).toHaveBeenCalledOnce();
 		const call = mockSellBaseInput.mock.calls[0][0];
 		expect(call.base.toString()).toBe('10000');
-		expect(call.slippage).toBeCloseTo(0.005);
+		// 50 bps -> 0.5 percent (the SDK's unit).
+		expect(call.slippage).toBeCloseTo(0.5);
 	});
 
 	it('sell direction: computes priceImpactBps correctly', async () => {
@@ -130,6 +142,52 @@ describe('quoteSwap', () => {
 		expect(result.priceImpactBps).toBe(200);
 	});
 
+	// `Pool.virtual_quote_reserves` is a signed i128. A negative large enough to
+	// wipe out effective depth means the pool cannot absorb a trade, and the
+	// impact math clamps with Math.max(0, …), so an unrefused quote would come
+	// back as 0 bps, the most attractive number the endpoint can return.
+	it('refuses a pool whose effective quote depth is wiped out by a negative virtual', async () => {
+		mockSwapSolanaState.mockResolvedValueOnce(
+			fakeState({
+				poolQuoteAmount: new BN(1_000_000),
+				pool: {
+					...fakeState().pool,
+					virtualQuoteReserves: new BN(-1_000_000),
+				},
+			}),
+		);
+
+		await expect(
+			quoteSwap({ inputMint: TOKEN, outputMint: WSOL, amountIn: 10_000 }),
+		).rejects.toThrow(/no tradable quote depth/);
+		expect(mockSellBaseInput).not.toHaveBeenCalled();
+	});
+
+	// A negative virtual that only reduces depth is still tradable: it must price
+	// against the reduced effective reserve, while the SDK still receives the raw
+	// vault balance and the signed virtual as separate arguments.
+	it('prices against reduced depth when a negative virtual does not exhaust the pool', async () => {
+		mockSwapSolanaState.mockResolvedValueOnce(
+			fakeState({
+				poolBaseAmount: new BN(1_000_000),
+				poolQuoteAmount: new BN(2_000_000),
+				pool: {
+					...fakeState().pool,
+					virtualQuoteReserves: new BN(-1_000_000),
+				},
+			}),
+		);
+		mockSellBaseInput.mockReturnValueOnce({ uiQuote: new BN(9_800) });
+
+		const result = await quoteSwap({ inputMint: TOKEN, outputMint: WSOL, amountIn: 10_000 });
+
+		// effective quote = 2e6 - 1e6 = 1e6, so the impact matches the baseline case.
+		expect(result.priceImpactBps).toBe(200);
+		const call = mockSellBaseInput.mock.calls[0][0];
+		expect(call.quoteReserve.toString()).toBe('2000000');
+		expect(call.virtualQuoteReserves.toString()).toBe('-1000000');
+	});
+
 	it('uses default slippageBps of 100 when not provided', async () => {
 		mockSwapSolanaState.mockResolvedValueOnce(fakeState());
 		mockBuyQuoteInput.mockReturnValueOnce({ base: new BN(5_000) });
@@ -137,7 +195,8 @@ describe('quoteSwap', () => {
 		await quoteSwap({ inputMint: WSOL, outputMint: TOKEN, amountIn: 5_000 });
 
 		const call = mockBuyQuoteInput.mock.calls[0][0];
-		expect(call.slippage).toBeCloseTo(0.01);
+		// Default 100 bps -> 1 percent.
+		expect(call.slippage).toBeCloseTo(1);
 	});
 
 	it('throws with clean message on invalid inputMint', async () => {

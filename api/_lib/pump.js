@@ -39,8 +39,21 @@ export async function getPumpSdk({ network = 'mainnet' } = {}) {
 		import('bn.js').then((m) => m.default || m),
 	]);
 	const connection = getConnection({ network });
-	const sdk = new OnlinePumpSdk() ? new OnlinePumpSdk(connection) : new PumpSdk(connection);
-	return { sdk, connection, BN, web3, PumpSdk, OnlinePumpSdk };
+	// `OnlinePumpSdk` owns the `fetch*` helpers; the instruction builders
+	// (`buyV2Instructions`, `sellV2Instructions`, `createV2Instruction`, the
+	// sweeps, ...) live on the offline `PumpSdk`. Compose both so callers see
+	// one `sdk` with the full surface. Offline wins for any method it defines.
+	const offline = new PumpSdk();
+	const online = new OnlinePumpSdk(connection);
+	const sdk = new Proxy(online, {
+		get(target, prop, receiver) {
+			const offlineVal = offline[prop];
+			if (typeof offlineVal === 'function') return offlineVal.bind(offline);
+			if (offlineVal !== undefined) return offlineVal;
+			return Reflect.get(target, prop, receiver);
+		},
+	});
+	return { sdk, connection, BN, web3, PumpSdk, OnlinePumpSdk, offline, online };
 }
 
 export async function getPumpSwapSdk({ network = 'mainnet' } = {}) {
@@ -164,6 +177,31 @@ export async function getAmmPoolState({ network = 'mainnet', mint } = {}) {
 	const baseReserve = new BN(baseAcc.amount.toString());
 	const quoteReserve = new BN(quoteAcc.amount.toString());
 
+	// PumpSwap prices against EFFECTIVE quote reserves:
+	//   effective = quote_vault_balance + pool.virtual_quote_reserves
+	// `virtual_quote_reserves` is an i128, so it is SIGNED and effective can sit
+	// below the raw vault balance. Anchor decodes it to a signed BN; never clamp
+	// it or re-read it unsigned. The SDK quote fns take it as its own argument
+	// and add it internally, so they get the raw `quoteReserve` alongside it;
+	// only our own spot-price math uses `effectiveQuoteReserve`.
+	// v2 trades (pump-swap-sdk 2.1) also leave the protocol and creator fees in
+	// the quote vault until swept; sells are paid only from the vault less
+	// those buckets, which `feeBucketsTotal` tells sellBaseInput.
+	const virtualQuoteReserves = new BN((pool.virtualQuoteReserves ?? 0).toString());
+	const effectiveQuoteReserve = quoteReserve.add(virtualQuoteReserves);
+	const feeBucketsTotal = new BN((pool.protocolFees ?? 0).toString()).add(
+		new BN((pool.creatorFees ?? 0).toString()),
+	);
+	// Pool-specific pricing inputs every buyQuoteInput / sellBaseInput call
+	// needs on top of the reserves: fee schedule by quote mint, mayhem pools,
+	// and the per-pool creator rate.
+	const poolQuoteArgs = {
+		virtualQuoteReserves,
+		quoteMint: pool.quoteMint,
+		isMayhemMode: pool.isMayhemMode === true,
+		creatorFeeBps: pool.creatorFeeBps,
+	};
+
 	const offline = new PumpAmmSdk();
 	const [globalConfigInfo, feeConfigInfo] = await Promise.all([
 		connection.getAccountInfo((await import('@pump-fun/pump-swap-sdk')).GLOBAL_CONFIG_PDA),
@@ -180,12 +218,29 @@ export async function getAmmPoolState({ network = 'mainnet', mint } = {}) {
 		pool,
 		baseReserve,
 		quoteReserve,
+		virtualQuoteReserves,
+		effectiveQuoteReserve,
+		feeBucketsTotal,
+		poolQuoteArgs,
 		baseMintAccount,
 		globalConfig,
 		feeConfig,
 		BN,
 		web3,
 	};
+}
+
+/**
+ * Convert user-facing slippage basis points into the PERCENT every @pump-fun
+ * SDK builder expects (`slippage: 1` = 1%): pump-sdk pads via
+ * `amount * floor(slippage * 10) / 1000`, pump-swap-sdk via `1 ± slippage / 100`.
+ * Passing a fraction (bps / 10_000) truncates curve protection to zero and
+ * makes AMM protection 100x too tight. 100 bps -> 1.
+ */
+export function slippagePercentFromBps(bps, { defaultBps = 100 } = {}) {
+	const n = Number(bps);
+	const effective = Number.isFinite(n) ? n : defaultBps;
+	return Math.max(0, Math.min(10_000, effective)) / 100;
 }
 
 // Build a versioned tx from a list of instructions, return base64 (unsigned).

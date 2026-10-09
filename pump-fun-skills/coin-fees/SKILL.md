@@ -247,14 +247,37 @@ Total available = (1) + (2)
 
 When a sharing config exists, `creator` is `feeSharingConfigPda(mint)` (the sharing config PDA address).
 
+Creator fees still held on the curve or pool (next section) are not in either vault until they are swept.
+
+## Held creator fees: sweep first
+
+Since `@pump-fun/pump-sdk@4.0.0` (the October 2026 program release), `buy_v3` / `sell_v3` on the bonding curve and `buy_v2` / `sell_v2` on pump-amm no longer pay the creator fee out per trade. They book it into a bucket on the curve (`BondingCurve.creatorFee`) or the canonical pool (`Pool.creatorFees`), and a permissionless sweep moves it into the creator vault:
+
+| Bucket | Sweep (`@pump-fun/pump-sdk@4.0.0`) | Lands in |
+| --- | --- | --- |
+| `BondingCurve.creatorFee` | `PUMP_SDK.sweepCreatorFeeInstruction({ payer, mint, creator, quoteMint, quoteTokenProgram })` | `creatorVaultPda(creator)` |
+| `Pool.creatorFees` | `PUMP_SDK.sweepPoolCreatorFeeInstruction({ payer, mint, coinCreator, quoteMint, quoteTokenProgram })` | AMM creator vault |
+
+`coinCreator` must be the pool's current `pool.coinCreator`. `quoteTokenProgram` is only needed for a non-SOL quote mint.
+
+A collect alone leaves the held fees behind, and the programs refuse any change to where creator fees go while a bucket still holds fees, so these fail unless the sweep runs **first in the same transaction**:
+
+- `distribute_creator_fees`, `admin_cto`, and `create_fee_sharing_config` through `migrate_bonding_curve_creator`: pump **6095 `CreatorFeesNotSwept`**.
+- `admin_cto_pool` and `create_fee_sharing_config` through `migrate_pool_coin_creator`: pump-amm **6081 `CreatorFeesNotSwept`**.
+- `update_fee_shares`: pump-fees **6033 `PoolCreatorFeesNotSwept`**.
+
+The three tx-building scripts below do this through `scripts/lib/sweep.mjs` (`coinCreatorFeeSweeps(connection, { mint, payer, recipient? })`), which reads both buckets and returns a sweep instruction for each nonzero one. Each script reports what it swept in a `swept` array (`source`, `recipient`, `quoteMint`, `amount`). Custom integrations must do the same: `OnlinePumpSdk.collectCoinCreatorFeeInstructions` does **not** sweep.
+
+Reference: [SWEEP_FEES.md](https://github.com/pump-fun/pump-public-docs/blob/main/docs/instructions/SWEEP_FEES.md).
+
 ## Collecting fees (no sharing config)
 
 - **Script:** `scripts/build-collect-fee-tx.mjs`
-- Uses `OnlinePumpSdk.collectCoinCreatorFeeInstructions(creator, payer)`
-- This calls both:
-  1. Pump program `collectCreatorFee` — moves SOL from `creatorVaultPda(creator)` to creator wallet
-  2. Pump AMM `collectCoinCreatorFee` — moves WSOL from AMM vault to creator's WSOL ATA (creates ATA if needed)
-- **Permissionless** — anyone can call this to trigger fee collection to the creator
+- First sweeps the curve and pool buckets that hold fees owed to the creator being collected for (`swept` in the output)
+- Then `OnlinePumpSdk.collectCoinCreatorFeeInstructions(creator, payer)`, which calls both:
+  1. Pump program `collectCreatorFee`: moves SOL from `creatorVaultPda(creator)` to the creator wallet
+  2. Pump AMM `collectCoinCreatorFee`: moves wSOL from the AMM vault to the creator's wSOL ATA (creates the ATA if needed)
+- **Permissionless**: anyone can call this to trigger fee collection to the creator
 
 ### Parameters (`build-collect-fee-tx.mjs`)
 
@@ -271,13 +294,14 @@ When a sharing config exists, `creator` is `feeSharingConfigPda(mint)` (the shar
 ## Distributing fees (with sharing config)
 
 - **Script:** `scripts/build-distribute-fees-tx.mjs`
+- Always starts with the sweeps of any nonzero curve or pool creator-fee bucket (`swept` in the output), so distribution does not fail with 6095
 - For **graduated** coins (pool exists):
-  1. Create WSOL ATA for sharing config authority (idempotent)
-  2. `transferCreatorFeesToPump()` — AMM program moves WSOL from AMM vault to pump creator vault
-  3. `PUMP_SDK.distributeCreatorFees({ mint, sharingConfig, sharingConfigAddress })` — splits vault balance to shareholders
+  1. Create the wSOL ATA for the sharing config authority (idempotent)
+  2. `transferCreatorFeesToPump()`: AMM program moves wSOL from the AMM vault to the pump creator vault
+  3. `PUMP_SDK.distributeCreatorFees({ mint, sharingConfig, sharingConfigAddress })`: splits the vault balance to shareholders
 - For **ungraduated** coins (bonding curve only):
   1. `PUMP_SDK.distributeCreatorFees(...)` only
-- **Permissionless** — anyone can trigger distribution
+- **Permissionless**: anyone can trigger distribution
 
 ### Parameters (`build-distribute-fees-tx.mjs`)
 
@@ -293,6 +317,7 @@ When a sharing config exists, `creator` is `feeSharingConfigPda(mint)` (the shar
 ## Creating or updating a sharing config
 
 - **Script:** `scripts/build-sharing-config-tx.mjs`
+- Both modes start with the sweeps of any nonzero curve or pool creator-fee bucket (`swept` in the output). Without them a coin with held fees fails with 6095 (create) or 6033 (update).
 - **Create mode:** Sets up a new fee sharing config for a coin. The coin creator must sign.
   1. `PUMP_SDK.createFeeSharingConfig({ creator, mint, pool })` — initializes config
   2. `PUMP_SDK.updateFeeShares(...)` — sets the desired shareholder split
@@ -331,8 +356,9 @@ Defaults match the pump.fun app constants (see `scripts/lib/constants.mjs` in th
 
 | Operation | Default compute units |
 | --------- | --------------------- |
-| Collect fee (direct creator) | **200_000** |
-| Distribute fees (sharing config) | **200_000** |
+| Collect fee (direct creator, sweeps included) | **200_000** |
+| Distribute fees (sharing config, sweeps included) | **300_000** |
+| Create or update sharing config (sweeps included) | **400_000** |
 
 Scripts accept `--compute-units` to override.
 

@@ -589,7 +589,9 @@ export function mountPumpFunCard({ panel, identity, skills, memory, protocol }) 
 		try {
 			const r = await skills.perform(
 				'pumpfun-claim-fees',
-				{ network: state.network },
+				// The agent's coin: fees its v3 / PumpSwap v2 trades left on the
+				// curve or pool are swept in before the collect.
+				{ network: state.network, mints: state.mint ? [state.mint] : [] },
 				{ identity },
 			);
 			toast(
