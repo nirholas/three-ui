@@ -1496,3 +1496,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide.
 ## License
 
 All rights reserved. See [LICENSE](LICENSE).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=nirholas/three-ui&type=Date)](https://www.star-history.com/#nirholas/three-ui&Date)
