@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "three-ui"
+abstract: "Browser-native 3D agent viewer and chat UI from three.ws: drop in a GLB, give it an LLM brain, and embed it anywhere."
+repository-code: "https://github.com/nirholas/three-ui"
+url: "https://three.ws"
+authors:
+  - name: three.ws
+    website: "https://three.ws"

@@ -1,0 +1,28 @@
+# three-ui
+
+> Browser-native 3D agent viewer and chat UI from three.ws: drop in a GLB, give it an LLM brain, and embed it anywhere.
+
+three-ui is an open-source repository by nirholas, part of the three.ws ecosystem.
+
+## Docs
+
+- [README](https://github.com/nirholas/three-ui/blob/HEAD/README.md): install, usage and reference
+- [Table of Contents](https://github.com/nirholas/three-ui/blob/HEAD/README.md#table-of-contents)
+- [What is three.ws?](https://github.com/nirholas/three-ui/blob/HEAD/README.md#what-is-threews)
+- [Vision](https://github.com/nirholas/three-ui/blob/HEAD/README.md#vision)
+- [Roadmap](https://github.com/nirholas/three-ui/blob/HEAD/README.md#roadmap)
+- [Key Features](https://github.com/nirholas/three-ui/blob/HEAD/README.md#key-features)
+- [Platform Pages](https://github.com/nirholas/three-ui/blob/HEAD/README.md#platform-pages)
+- [Screenshots](https://github.com/nirholas/three-ui/blob/HEAD/README.md#screenshots)
+- [Architecture](https://github.com/nirholas/three-ui/blob/HEAD/README.md#architecture)
+- [AGENTS.md](https://github.com/nirholas/three-ui/blob/HEAD/AGENTS.md): guidance for coding agents
+- [Full text for LLMs](https://github.com/nirholas/three-ui/blob/HEAD/llms-full.txt): the README inlined
+
+## Project
+
+- [Source](https://github.com/nirholas/three-ui)
+- [Issues](https://github.com/nirholas/three-ui/issues)
+- [Discussions](https://github.com/nirholas/three-ui/discussions)
+- [Homepage](https://nirholas.github.io/three-ui/)
+- [three.ws](https://three.ws): the platform this is part of
+- [All repositories by nirholas](https://github.com/nirholas/nirholas#readme)

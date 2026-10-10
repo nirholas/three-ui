@@ -1,13 +1,12 @@
+# three-ui
+
+> Browser-native 3D agent viewer and chat UI from three.ws: drop in a GLB, give it an LLM brain, and embed it anywhere.
+
 # three.ws
-
-<!-- three.ws:badges -->
-[![GitHub stars](https://img.shields.io/github/stars/nirholas/three-ui?style=flat&logo=github)](https://github.com/nirholas/three-ui/stargazers) [![Last commit](https://img.shields.io/github/last-commit/nirholas/three-ui?style=flat)](https://github.com/nirholas/three-ui/commits) [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat)](https://github.com/nirholas/three-ui/pulls) [![AI agent friendly](https://img.shields.io/badge/AI%20agents-AGENTS.md%20%2B%20llms.txt-6d5dfc?style=flat)](https://github.com/nirholas/three-ui/blob/HEAD/AGENTS.md)
-<!-- /three.ws:badges -->
-
 
 https://github.com/user-attachments/assets/d52515d1-cb04-4dd6-98bd-fef233312dc4
 
-**Give your AI a body.** three.ws is an open-source, browser-native 3D AI agent platform. Drop a GLB file, add an LLM brain, register on-chain, and embed anywhere — no plugins, no server uploads, no installs required.
+**Give your AI a body.** three.ws is an open-source, browser-native 3D AI agent platform. Drop a GLB file, add an LLM brain, register on-chain, and embed anywhere: no plugins, no server uploads, no installs required.
 
 <video width="100%" height="auto" autoplay loop muted playsinline>
   <source src="https://github.com/nirholas/three-ui/raw/refs/heads/main/public/skills.mp4" type="video/mp4">
@@ -57,17 +56,17 @@ three.ws is a full-stack system for creating, deploying, and embedding 3D AI age
 
 At its core, it does four things:
 
-1. **Render** — loads and validates glTF 2.0 / GLB models in WebGL 2.0 with zero server-side processing. Drag a file onto the browser and it renders instantly with full Draco, KTX2, and Meshopt decompression.
+1. **Render**: loads and validates glTF 2.0 / GLB models in WebGL 2.0 with zero server-side processing. Drag a file onto the browser and it renders instantly with full Draco, KTX2, and Meshopt decompression.
 
-2. **Embody** — wraps any avatar with an LLM brain. The agent listens to the user, thinks with Claude, executes tools (animations, gestures, memory operations, skill calls), and expresses emotion through morph-target blending on the 3D model in real time.
+2. **Embody**: wraps any avatar with an LLM brain. The agent listens to the user, thinks with Claude, executes tools (animations, gestures, memory operations, skill calls), and expresses emotion through morph-target blending on the 3D model in real time.
 
-3. **Register** — optionally mints the agent as an ERC-8004 token on any EVM chain, giving it a stable on-chain identity, a wallet address, signed action history, and a reputation score that cannot be forged.
+3. **Register**: optionally mints the agent as an ERC-8004 token on any EVM chain, giving it a stable on-chain identity, a wallet address, signed action history, and a reputation score that cannot be forged.
 
-4. **Embed** — distributes the agent as an `<agent-3d>` web component that anyone can drop into a page, or as one of five purpose-built widget types (turntable, animation gallery, talking agent, passport card, hotspot tour) with Open Graph and oEmbed support built in.
+4. **Embed**: distributes the agent as an `<agent-3d>` web component that anyone can drop into a page, or as one of five purpose-built widget types (turntable, animation gallery, talking agent, passport card, hotspot tour) with Open Graph and oEmbed support built in.
 
 The backend is a set of Vercel serverless functions backed by Neon Postgres for metadata, Cloudflare R2 for model storage, and Upstash Redis for rate limiting. It exposes a full OAuth 2.1 authorization server and an MCP (Model Context Protocol) endpoint so external AI systems can drive avatars programmatically.
 
-three.ws is production-ready and serves [three.ws](https://three.ws) live. The entire stack — viewer, agent runtime, contracts, backend, and web component — is open source under Apache 2.0.
+three.ws is production-ready and serves [three.ws](https://three.ws) live. The entire stack: viewer, agent runtime, contracts, backend, and web component: is open source under Apache 2.0.
 
 ---
 
@@ -75,9 +74,9 @@ three.ws is production-ready and serves [three.ws](https://three.ws) live. The e
 
 One day, creating your agent should be as simple as taking a selfie.
 
-Point your camera at yourself — or anyone — and watch a fully realized 3D avatar emerge: your face, your voice, your personality, alive in the browser. That avatar becomes an agent with memory and skills, registered onchain as an ERC-8004 token, permanent and verifiable by anyone forever. No 3D software. No wallet setup. No uploads. Just a photo and a name.
+Point your camera at yourself: or anyone: and watch a fully realized 3D avatar emerge: your face, your voice, your personality, alive in the browser. That avatar becomes an agent with memory and skills, registered onchain as an ERC-8004 token, permanent and verifiable by anyone forever. No 3D software. No wallet setup. No uploads. Just a photo and a name.
 
-This is the direction three.ws is heading: **photo → avatar → agent → onchain identity**, in a single flow. The infrastructure is already here — the viewer, the runtime, the contracts, the embedding layer. What comes next is closing the gap between a picture of a person and a living, ownable, embeddable piece of them that exists on the internet permanently.
+This is the direction three.ws is heading: **photo → avatar → agent → onchain identity**, in a single flow. The infrastructure is already here: the viewer, the runtime, the contracts, the embedding layer. What comes next is closing the gap between a picture of a person and a living, ownable, embeddable piece of them that exists on the internet permanently.
 
 ---
 
@@ -95,16 +94,16 @@ three.ws ships in four phases. Each phase closes a specific gap between the curr
 
 ---
 
-### Phase 0 — Foundations *(Shipped)*
+### Phase 0: Foundations *(Shipped)*
 
-The full stack is live at [three.ws](https://three.ws): WebGL viewer, LLM agent runtime, ERC-8004 identity contracts, OAuth 2.1 server, MCP endpoint, and the `<agent-3d>` web component. Anyone can register an agent today — but the avatar still has to come from a 3D artist or a third-party tool.
+The full stack is live at [three.ws](https://three.ws): WebGL viewer, LLM agent runtime, ERC-8004 identity contracts, OAuth 2.1 server, MCP endpoint, and the `<agent-3d>` web component. Anyone can register an agent today: but the avatar still has to come from a 3D artist or a third-party tool.
 
 **What works:** model upload, agent runtime, onchain registration, embedding, signed action history, reputation scores.
 **What doesn't:** there is no automated path from a real human face to a usable 3D avatar.
 
 ---
 
-### Phase 1 — Selfie → Avatar Engine
+### Phase 1: Selfie → Avatar Engine
 
 **Goal:** any user takes 3 selfies (left, center, right) and receives a rigged, animatable 3D avatar in under 60 seconds.
 
@@ -123,12 +122,12 @@ The full stack is live at [three.ws](https://three.ws): WebGL viewer, LLM agent 
 
 ---
 
-### Phase 2 — Agent Personalization
+### Phase 2: Agent Personalization
 
-**Goal:** the avatar isn't just *you* — the agent *acts* like you.
+**Goal:** the avatar isn't just *you*: the agent *acts* like you.
 
 **Deliverables**
-- Voice cloning (3–10 seconds of speech → ElevenLabs custom voice bound to the agent)
+- Voice cloning (3-10 seconds of speech → ElevenLabs custom voice bound to the agent)
 - Persona extraction from a short onboarding interview (tone, vocabulary, interests)
 - Memory seeding from connected accounts (X, GitHub, Farcaster) with explicit user consent
 - Per-agent fine-tuned system prompt stored in the manifest, signed and pinned to IPFS
@@ -137,16 +136,16 @@ The full stack is live at [three.ws](https://three.ws): WebGL viewer, LLM agent 
 
 ---
 
-### Phase 3 — Onchain Economy
+### Phase 3: Onchain Economy
 
 **Goal:** agents are real economic objects on EVM and Solana, not just collectibles.
 
 **Deliverables**
-- **Agent tokens** — ERC-8004 mints with bonding-curve pricing or fair launch options
-- **Reputation markets** — stake on agents, earn from their action history (extends `ReputationRegistry.sol`)
-- **Skill royalties** — skill authors earn per-call fees through EIP-7710 delegated permissions
-- **Agent-to-agent payments** — agents transact autonomously via their delegated signer wallets
-- **Subscriptions & DCA** — recurring onchain payments to creators (cron infra already in place)
+- **Agent tokens**: ERC-8004 mints with bonding-curve pricing or fair launch options
+- **Reputation markets**: stake on agents, earn from their action history (extends `ReputationRegistry.sol`)
+- **Skill royalties**: skill authors earn per-call fees through EIP-7710 delegated permissions
+- **Agent-to-agent payments**: agents transact autonomously via their delegated signer wallets
+- **Subscriptions & DCA**: recurring onchain payments to creators (cron infra already in place)
 
 **Funding requirements**
 - Smart contract audits (multi-firm) for the reputation, royalty, and delegation contracts
@@ -157,19 +156,19 @@ The full stack is live at [three.ws](https://three.ws): WebGL viewer, LLM agent 
 
 ---
 
-### Phase 4 — Open Inference Network
+### Phase 4: Open Inference Network
 
 **Goal:** decouple agent inference from any single provider. Anyone can run a node; agents pay nodes onchain for compute.
 
 **Deliverables**
 - Open protocol for agent inference (model weights, GPU runtime, signed responses)
 - Node operator client (Docker + GPU drivers) with onchain registration
-- Onchain settlement for inference jobs — pay-per-token with cryptographic receipts
+- Onchain settlement for inference jobs: pay-per-token with cryptographic receipts
 - Federation with existing decentralized compute networks where appropriate
 
 **Compute requirements**
 - Bootstrap GPU credits for early node operators
-- Cryptoeconomic security model (slashing, validator set) — research + audit budget
+- Cryptoeconomic security model (slashing, validator set): research + audit budget
 
 **Verification:** ≥50% of production agent traffic served by independent node operators; latency parity with centralized inference.
 
@@ -185,11 +184,11 @@ The full stack is live at [three.ws](https://three.ws): WebGL viewer, LLM agent 
 | **Token launch liquidity** | Agent token markets | 3 |
 | **Indexer infrastructure** | Multi-chain crawl + reputation aggregation | 3 |
 | **Node operator credits** | Bootstrap the open inference network | 4 |
-| **Engineering headcount** | Capture pipeline, contracts, indexer, ops | 1–4 |
+| **Engineering headcount** | Capture pipeline, contracts, indexer, ops | 1-4 |
 
-Phases 1 and 2 unblock the consumer story — *anyone gets an agent of themselves*. Phases 3 and 4 unblock the onchain story — *those agents are real economic actors that don't depend on any one company to keep running*. Both are required for the vision; neither is funded yet.
+Phases 1 and 2 unblock the consumer story: *anyone gets an agent of themselves*. Phases 3 and 4 unblock the onchain story: *those agents are real economic actors that don't depend on any one company to keep running*. Both are required for the vision; neither is funded yet.
 
-If you want to support the project — compute credits, grants, partnerships, or contributions — open an issue or reach out via [three.ws](https://three.ws).
+If you want to support the project: compute credits, grants, partnerships, or contributions: open an issue or reach out via [three.ws](https://three.ws).
 
 ---
 
@@ -207,21 +206,21 @@ If you want to support the project — compute credits, grants, partnerships, or
 - LLM brain powered by Claude (Anthropic API) with a structured tool-loop architecture
 - Up to 8 tool iterations per turn before returning final output
 - Built-in tools: `wave`, `lookAt`, `play_clip`, `setExpression`, `speak`, `remember`
-- Composable skill system — install skills from IPFS, Arweave, or HTTP; each skill is a self-contained bundle with a description, tool definitions, and async handlers
+- Composable skill system: install skills from IPFS, Arweave, or HTTP; each skill is a self-contained bundle with a description, tool definitions, and async handlers
 - Weighted emotion blending (celebration, concern, curiosity, empathy, patience) driven by protocol events, not a finite-state machine
 - Web Speech API for STT/TTS out of the box; ElevenLabs integration for production-quality voice
 
 **Identity & On-Chain**
 - ERC-8004 smart contracts (IdentityRegistry, ReputationRegistry, ValidationRegistry) deployable on any EVM chain
 - Each agent is an ERC-721 token with a stable `agentId`, owner wallet, delegated signer (EIP-712), and IPFS-pinned manifest
-- Signed action log — every `speak`, `remember`, `skill-done`, and `validate` event is recorded on-chain-optionally or in the database with a cryptographic signature
+- Signed action log: every `speak`, `remember`, `skill-done`, and `validate` event is recorded on-chain-optionally or in the database with a cryptographic signature
 - EIP-7710 delegated permissions for composable agent-to-agent authorization
 - Solana support (SIWS sign-in, Solana wallet linking, Metaplex NFT option)
 
 **Embedding & Distribution**
-- `<agent-3d>` custom element — drop it anywhere with no framework dependency
+- `<agent-3d>` custom element: drop it anywhere with no framework dependency
 - Five widget variants: turntable, animation gallery, talking agent, ERC-8004 passport card, hotspot tour
-- Widget Studio — point-and-click embed code generator
+- Widget Studio: point-and-click embed code generator
 - Open Graph metadata and oEmbed support for rich social previews when links are shared
 - Versioned CDN bundles at `/agent-3d/x.y.z/agent-3d.js`
 
@@ -245,9 +244,9 @@ A map of every user-facing route. Full detail (source files, feature description
 | **App / Core** | `/app`, `/create`, `/first-meet` | 3D viewer, agent creation wizard, onboarding |
 | **Marketplace** | `/marketplace`, `/marketplace/agents/[id]` | Browsable agent marketplace |
 | **Chat SPA** | `/chat` | Full Svelte AI chat with model selector, tools, artifacts, wallet |
-| **Chat — Marketing** | `/chat#solutions/*`, `/chat#business/*` | Per-team and enterprise landing pages |
-| **Chat — Features** | `/chat#features/*` | Feature detail pages (web-app, mobile-app, ai-design, ai-slides, browser-operator, wide-research, mail, skills) |
-| **Chat — Resources** | `/chat#resources/*` | Blog, docs, trust center, updates, use cases |
+| **Chat: Marketing** | `/chat#solutions/*`, `/chat#business/*` | Per-team and enterprise landing pages |
+| **Chat: Features** | `/chat#features/*` | Feature detail pages (web-app, mobile-app, ai-design, ai-slides, browser-operator, wide-research, mail, skills) |
+| **Chat: Resources** | `/chat#resources/*` | Blog, docs, trust center, updates, use cases |
 | **Auth** | `/login`, `/register`, `/forgot-password`, `/reset-password` | Email + wallet sign-in/up |
 | **Agent (Platform)** | `/agent/[id]`, `/agent/[id]/embed`, `/agent/[id]/edit` | Agent chat, chromeless embed, manifest editor |
 | **Agent (On-Chain)** | `/a/[chain]/[id]`, `/a/sol/[asset]` | ERC-8004 and Metaplex Core passports |
@@ -416,7 +415,7 @@ See [Environment Variables](#environment-variables) for the full reference.
 
 ### Initialize the Database
 
-The schema is idempotent — run it against your Postgres instance to create all tables:
+The schema is idempotent: run it against your Postgres instance to create all tables:
 
 ```bash
 psql $DATABASE_URL < api/_lib/schema.sql
@@ -444,7 +443,7 @@ Copy-paste ready snippets for the most common use cases. Swap in your own GLB UR
 
 ### 1. Minimal viewer (no AI)
 
-The simplest possible setup — one script tag, one element, zero build step.
+The simplest possible setup: one script tag, one element, zero build step.
 
 ```html
 <!doctype html>
@@ -464,7 +463,7 @@ The simplest possible setup — one script tag, one element, zero build step.
 </html>
 ```
 
-Drag-to-rotate, scroll-to-zoom, full PBR rendering — no API key, no account required. Swap `body=` for any publicly accessible `.glb` URL.
+Drag-to-rotate, scroll-to-zoom, full PBR rendering: no API key, no account required. Swap `body=` for any publicly accessible `.glb` URL.
 
 ---
 
@@ -480,7 +479,7 @@ Add `brain=` and `instructions=` to turn the viewer into a conversational agent.
   brain="claude-sonnet-4-6"
   name="Aria"
   instructions="You are Aria, a friendly AI guide. Be warm, concise, and occasionally playful.
-                When someone greets you, wave at them. Keep replies to 2–3 sentences."
+                When someone greets you, wave at them. Keep replies to 2-3 sentences."
   mode="inline"
   width="400px"
   height="560px"
@@ -515,7 +514,7 @@ Pin the agent to a corner of the page so it persists as users scroll.
 
 ### 4. Load a registered agent by ID
 
-If you've registered an agent on the platform, load it entirely from its manifest — no inline attributes needed.
+If you've registered an agent on the platform, load it entirely from its manifest: no inline attributes needed.
 
 ```html
 <!-- By platform agent ID -->
@@ -585,7 +584,7 @@ Hide the built-in chrome and wire in your own input using the element's JS API.
 
 ### 6. iframe widget (works in Notion, Substack, Webflow)
 
-Use a widget URL directly — no script tag needed.
+Use a widget URL directly: no script tag needed.
 
 ```html
 <iframe
@@ -598,7 +597,7 @@ Use a widget URL directly — no script tag needed.
 ></iframe>
 ```
 
-Generate the `src` URL from [Widget Studio](https://three.ws/studio) — pick an avatar, choose a widget type, and copy the snippet.
+Generate the `src` URL from [Widget Studio](https://three.ws/studio): pick an avatar, choose a widget type, and copy the snippet.
 
 ---
 
@@ -647,27 +646,27 @@ Step-by-step guides in [`docs/tutorials/`](docs/tutorials/):
 | Tutorial | What you'll build | Time |
 |---|---|---|
 | [Build Your First Agent](docs/tutorials/first-agent.md) | A talking 3D character on a shareable page, from zero | ~20 min |
-| [Embed on Your Website](docs/tutorials/embed-on-website.md) | Add an agent to any page — plain HTML, React, Webflow, WordPress | ~15 min |
+| [Embed on Your Website](docs/tutorials/embed-on-website.md) | Add an agent to any page: plain HTML, React, Webflow, WordPress | ~15 min |
 | [Write a Custom Skill](docs/tutorials/custom-skill.md) | A new tool the agent can call (e.g., fetch live weather data) | ~30 min |
 | [Register On-Chain](docs/tutorials/register-onchain.md) | Mint your agent as an ERC-8004 token with permanent identity | ~20 min |
 | [Build a Personal AI Site](docs/tutorials/personal-ai-site.md) | A full personal site with an embedded AI version of yourself | ~45 min |
 
 ### Common gotchas
 
-**CORS** — if your GLB is hosted on a different domain, the server must send `Access-Control-Allow-Origin: *`. Without it the fetch is blocked and the canvas stays blank. Uploading via the platform's storage sets this automatically.
+**CORS**: if your GLB is hosted on a different domain, the server must send `Access-Control-Allow-Origin: *`. Without it the fetch is blocked and the canvas stays blank. Uploading via the platform's storage sets this automatically.
 
-**File size** — models over ~50 MB load slowly. Compress with Draco:
+**File size**: models over ~50 MB load slowly. Compress with Draco:
 ```bash
 npx gltf-transform draco input.glb output.glb
 ```
 
-**Voice on HTTPS** — `getUserMedia` (microphone) requires HTTPS. Localhost is exempt; any remote deployment needs TLS. Vercel and Netlify both provide it automatically.
+**Voice on HTTPS**: `getUserMedia` (microphone) requires HTTPS. Localhost is exempt; any remote deployment needs TLS. Vercel and Netlify both provide it automatically.
 
-**CSP** — if your page has a strict Content Security Policy, add:
+**CSP**: if your page has a strict Content Security Policy, add:
 ```
 script-src 'self' https://three.ws;
 ```
-For sandboxed iframes use the widget embed path instead — it runs in its own browsing context.
+For sandboxed iframes use the widget embed path instead: it runs in its own browsing context.
 
 ---
 
@@ -775,7 +774,7 @@ For sandboxed iframes use the widget embed path instead — it runs in its own b
 
 ### Event Bus (Agent Protocol)
 
-`src/agent-protocol.js` implements a lightweight `EventTarget` subclass that is the nervous system of the platform. Every component — avatar, runtime, identity, UI — communicates exclusively through this bus. There are no direct method calls between layers.
+`src/agent-protocol.js` implements a lightweight `EventTarget` subclass that is the nervous system of the platform. Every component: avatar, runtime, identity, UI: communicates exclusively through this bus. There are no direct method calls between layers.
 
 The bus maintains a 200-action ring buffer for debugging and replay. Embed variants expose a filtered subset of events through `postMessage` to the host page.
 
@@ -807,17 +806,17 @@ Identity-relevant events (`speak`, `remember`, `sign`, `skill-done`, `validate`,
 1. User message (text or STT transcript) arrives
 2. System prompt is assembled: manifest instructions + recalled memory + skill descriptions
 3. Claude is called with the conversation history and all available tools
-4. Tool calls are dispatched in order — each built-in tool or skill handler receives a rich context object:
+4. Tool calls are dispatched in order: each built-in tool or skill handler receives a rich context object:
    ```js
    { viewer, memory, llm, speak, listen, fetch, loadGLB, loadClip, loadJSON, call, stage, agentId }
    ```
 5. Tool results are appended to conversation history as `tool_result` messages
-6. Steps 3–5 repeat until Claude returns with no tool calls, or the iteration limit (8) is hit
+6. Steps 3-5 repeat until Claude returns with no tool calls, or the iteration limit (8) is hit
 7. Final text response is optionally spoken via TTS
 
 **Providers** (`src/runtime/providers.js`):
-- `AnthropicProvider` — connects to the Anthropic API, supports streaming
-- `NullProvider` — no-op for testing and offline mode
+- `AnthropicProvider`: connects to the Anthropic API, supports streaming
+- `NullProvider`: no-op for testing and offline mode
 
 **Built-in tools** (`src/runtime/tools.js`):
 
@@ -834,7 +833,7 @@ Skills can define additional tools that override or augment the built-ins. The s
 
 ### Empathy Layer
 
-`src/agent-avatar.js` implements the Empathy Layer — a continuous weighted emotion blend that drives the avatar's facial morph targets and head orientation in real time.
+`src/agent-avatar.js` implements the Empathy Layer: a continuous weighted emotion blend that drives the avatar's facial morph targets and head orientation in real time.
 
 Emotions are not a finite-state machine. Each emotion is a float (0..1) that decays linearly per frame at a different rate. Protocol events inject spikes:
 
@@ -848,18 +847,18 @@ Emotions are not a finite-state machine. Each emotion is a float (0..1) that dec
 | `validate` (errors) | concern | +0.6 |
 
 Decay half-lives (approximate):
-- Patience: ~20s — persists during long operations
-- Empathy: ~13s — lingers after emotional events
-- Concern: ~12s — sustained worry
-- Curiosity: ~8s — alert, fades moderately
-- Celebration: ~6s — brief, upbeat
+- Patience: ~20s: persists during long operations
+- Empathy: ~13s: lingers after emotional events
+- Concern: ~12s: sustained worry
+- Curiosity: ~8s: alert, fades moderately
+- Celebration: ~6s: brief, upbeat
 
 The blended emotion mix drives morph target values each frame. For example:
 - Celebration → `mouthSmile 0.85`, `mouthOpen 0.2`
 - Concern → `mouthFrown 0.55`, `browInnerUp 0.6`
 - Empathy → `eyeSquint 0.4`, `browInnerUp 0.5`
 
-Head tilt and lean are also driven by the blend — curiosity tilts the head, patience leans slightly back.
+Head tilt and lean are also driven by the blend: curiosity tilts the head, patience leans slightly back.
 
 This architecture means the avatar feels responsive and emotionally coherent without any hand-authored animation triggers.
 
@@ -902,9 +901,9 @@ export default {
 ```
 
 Skills are loaded from the agent manifest at runtime. The `SkillRegistry` supports three trust modes:
-- `any` — install skills from any source (development only)
-- `owned-only` — only skills the agent owner has registered
-- `whitelist` — only approved skill URIs
+- `any`: install skills from any source (development only)
+- `owned-only`: only skills the agent owner has registered
+- `whitelist`: only approved skill URIs
 
 Skills are distributed over IPFS, Arweave, or HTTP. The public skills registry is at `/public/skills-index.json`.
 
@@ -927,10 +926,10 @@ User is a game developer interested in character animation.
 A `MEMORY.md` index file is auto-maintained. At the start of each conversation turn, the memory store is scanned and high-salience entries are injected into the system prompt.
 
 **Storage modes:**
-- `local` — stored in the browser's local storage (default for development)
-- `ipfs` — pinned to IPFS via Pinata or Web3.Storage
-- `encrypted-ipfs` — encrypted before pinning (user holds the key)
-- `none` — stateless, no memory between sessions
+- `local`: stored in the browser's local storage (default for development)
+- `ipfs`: pinned to IPFS via Pinata or Web3.Storage
+- `encrypted-ipfs`: encrypted before pinning (user holds the key)
+- `none`: stateless, no memory between sessions
 
 Memory types (`user`, `feedback`, `project`, `reference`) follow the same taxonomy used by this codebase's own Claude guidelines.
 
@@ -983,7 +982,7 @@ The Widget Studio (`/studio`) lets anyone build a shareable, embeddable 3D exper
 | **Turntable** | Auto-rotating model showcase with configurable background, lighting, and camera |
 | **Animation Gallery** | Paginated grid of named clips; click any to play it on the model |
 | **Talking Agent** | Full chat interface with the LLM brain; embed a conversational agent anywhere |
-| **ERC-8004 Passport** | On-chain identity card — shows agent name, owner, reputation score, and verification badge |
+| **ERC-8004 Passport** | On-chain identity card: shows agent name, owner, reputation score, and verification badge |
 | **Hotspot Tour** | 3D hotspots pinned to world-space coordinates; click to reveal text annotations |
 
 Each widget has:
@@ -1007,10 +1006,10 @@ The full OpenAPI 3.1 spec is available at `/openapi.json`. The key API surface i
 |---|---|---|---|
 | GET | `/api/agents` | session | List your agents |
 | POST | `/api/agents` | session | Create an agent |
-| GET | `/api/agents/:id` | — | Get agent detail |
+| GET | `/api/agents/:id` |: | Get agent detail |
 | PATCH | `/api/agents/:id` | session | Update agent |
 | DELETE | `/api/agents/:id` | session | Delete agent |
-| GET | `/api/agents/:id/manifest` | — | Download manifest JSON |
+| GET | `/api/agents/:id/manifest` |: | Download manifest JSON |
 | POST | `/api/agents/:id/sign` | session | Sign a message with agent wallet |
 | GET/POST | `/api/agents/:id/embed-policy` | session | Manage iframe origin allowlist |
 | POST | `/api/agents/register-prep` | session | Prep EVM on-chain registration |
@@ -1021,9 +1020,9 @@ The full OpenAPI 3.1 spec is available at `/openapi.json`. The key API surface i
 
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| GET | `/api/avatars` | — | List public avatars |
+| GET | `/api/avatars` |: | List public avatars |
 | POST | `/api/avatars` | session | Create avatar record |
-| GET | `/api/avatars/:id` | — | Get avatar detail |
+| GET | `/api/avatars/:id` |: | Get avatar detail |
 | PATCH | `/api/avatars/:id` | session | Update metadata |
 | DELETE | `/api/avatars/:id` | session | Soft-delete avatar |
 | POST | `/api/avatars/:id/presign` | session | Get presigned R2 upload URL |
@@ -1045,8 +1044,8 @@ The full OpenAPI 3.1 spec is available at `/openapi.json`. The key API surface i
 | PATCH | `/api/widgets/:id` | session | Update widget |
 | DELETE | `/api/widgets/:id` | session | Delete widget |
 | POST | `/api/widgets/:id/duplicate` | session | Clone widget |
-| GET | `/api/widgets/:id/stats` | — | View stats |
-| GET | `/api/widgets/oembed` | — | oEmbed card |
+| GET | `/api/widgets/:id/stats` |: | View stats |
+| GET | `/api/widgets/oembed` |: | oEmbed card |
 
 ### Memory API
 
@@ -1130,7 +1129,7 @@ Access tokens are short-lived JWTs (1 hour). Refresh tokens are opaque strings s
 **Endpoint:** `POST /api/mcp`
 **Auth:** OAuth 2.1 Bearer token with `mcp` scope
 **Registry:** Listed on the [official MCP Registry](https://registry.modelcontextprotocol.io/?q=three.ws) as `io.github.nirholas/three.ws`
-**x402scan:** [view on x402scan](https://www.x402scan.com/server/17cbd874-52ac-4920-a020-b22ff2489a07) — paid MCP tool calls and revenue
+**x402scan:** [view on x402scan](https://www.x402scan.com/server/17cbd874-52ac-4920-a020-b22ff2489a07): paid MCP tool calls and revenue
 
 **Available tools:**
 
@@ -1157,16 +1156,16 @@ ERC-8004 is a draft standard for verifiable 3D agent identity. The `contracts/` 
 
 ### Contracts
 
-**IdentityRegistry.sol** — the primary contract. Each agent is an ERC-721 token with:
-- `agentId` — stable numeric ID (the token ID)
-- `owner` — EVM address of the agent's owner
-- `delegatedSigner` — optional secondary address for runtime signing (EIP-712 typed signature)
-- `tokenURI` — IPFS URL of the agent manifest JSON
-- `metadata` — on-chain name, description, image pointer
+**IdentityRegistry.sol**: the primary contract. Each agent is an ERC-721 token with:
+- `agentId`: stable numeric ID (the token ID)
+- `owner`: EVM address of the agent's owner
+- `delegatedSigner`: optional secondary address for runtime signing (EIP-712 typed signature)
+- `tokenURI`: IPFS URL of the agent manifest JSON
+- `metadata`: on-chain name, description, image pointer
 
-**ReputationRegistry.sol** — stores signed feedback scores. Each reviewer can submit one score per agent. Scores are averaged for an on-chain reputation metric.
+**ReputationRegistry.sol**: stores signed feedback scores. Each reviewer can submit one score per agent. Scores are averaged for an on-chain reputation metric.
 
-**ValidationRegistry.sol** — records validator attestations for off-chain proofs (glTF validation reports, skill audits, security reviews).
+**ValidationRegistry.sol**: records validator attestations for off-chain proofs (glTF validation reports, skill audits, security reviews).
 
 ### Deployment Addresses
 
@@ -1190,12 +1189,12 @@ The agent is now an ERC-721 token. Its manifest lives on IPFS. Its action histor
 
 `api/cron/erc8004-crawl.js` runs every 15 minutes to index new IdentityRegistry mint events. Indexed agents appear in `/discover` and can be imported via `/hydrate`.
 
-### Solana variant — same shape, no deployed program
+### Solana variant: same shape, no deployed program
 
 Solana ships an ERC-8004 analog without any custom on-chain program:
 
-- **Identity** — Metaplex Core NFT minted via `registerSolanaAgent()` (the asset pubkey is the agent ID).
-- **Reputation + Validation** — signed SPL Memo transactions referencing the agent asset pubkey, with a JSON envelope (`threews.feedback.v1` / `threews.validation.v1`). Anyone can read every attestation about an agent via `getSignaturesForAddress(assetPubkey)`.
+- **Identity**: Metaplex Core NFT minted via `registerSolanaAgent()` (the asset pubkey is the agent ID).
+- **Reputation + Validation**: signed SPL Memo transactions referencing the agent asset pubkey, with a JSON envelope (`threews.feedback.v1` / `threews.validation.v1`). Anyone can read every attestation about an agent via `getSignaturesForAddress(assetPubkey)`.
 
 SDK:
 
@@ -1226,7 +1225,7 @@ Solana agents can ingest live pump.fun activity (GitHub social-fee claims, token
 | Reputation | [api/agents/solana/[action].js](api/agents/solana/%5Baction%5D.js) (`reputation`) | `pumpfun_signals` block in response |
 | Passport | [api/agents/solana/[action].js](api/agents/solana/%5Baction%5D.js) (`card`) | `pumpfun` block on the agent card |
 
-The crawler runs on a `*/15 * * * *` schedule (see [vercel.json](vercel.json)) and writes into the `pumpfun_signals` table. Agents subscribed via `watch-start` react to incoming events through the existing protocol bus — no new event types required.
+The crawler runs on a `*/15 * * * *` schedule (see [vercel.json](vercel.json)) and writes into the `pumpfun_signals` table. Agents subscribed via `watch-start` react to incoming events through the existing protocol bus: no new event types required.
 
 Full design and configuration in [docs/solana-pumpfun.md](docs/solana-pumpfun.md).
 
@@ -1234,7 +1233,7 @@ Full design and configuration in [docs/solana-pumpfun.md](docs/solana-pumpfun.md
 
 ## Database Schema
 
-The Postgres schema (`api/_lib/schema.sql`) is fully idempotent — all migrations use `CREATE TABLE IF NOT EXISTS` patterns. Safe to re-run on any environment.
+The Postgres schema (`api/_lib/schema.sql`) is fully idempotent: all migrations use `CREATE TABLE IF NOT EXISTS` patterns. Safe to re-run on any environment.
 
 **Core tables:**
 
@@ -1478,23 +1477,23 @@ cd contracts && forge test
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide.
 
 **Quick rules:**
-- Match existing style — no reformatting adjacent code
+- Match existing style: no reformatting adjacent code
 - Every changed line should trace to the task
 - Add tests for new API endpoints
 - Run `npm run verify` before opening a PR (Prettier + build check)
-- Keep PRs focused — one concern per PR
+- Keep PRs focused: one concern per PR
 
 **Branch conventions:**
-- `feat/...` — new features
-- `fix/...` — bug fixes
-- `refactor/...` — structural changes without behavior changes
-- `docs/...` — documentation only
+- `feat/...`: new features
+- `fix/...`: bug fixes
+- `refactor/...`: structural changes without behavior changes
+- `docs/...`: documentation only
 
 **Development tips:**
-- The viewer runs standalone at `/app` — no auth, no backend required
+- The viewer runs standalone at `/app`: no auth, no backend required
 - Use `mode=view` in the `<agent-3d>` element to test rendering without a brain
 - Set `CHAT_MODEL=claude-haiku-4-5-20251001` locally to keep API costs low during development
-- The MCP server can be tested with `curl` — it's plain JSON-RPC over HTTP
+- The MCP server can be tested with `curl`: it's plain JSON-RPC over HTTP
 
 ---
 
@@ -1505,26 +1504,3 @@ All rights reserved. See [LICENSE](LICENSE).
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=nirholas/three-ui&type=Date)](https://www.star-history.com/#nirholas/three-ui&Date)
-
-<!-- three.ws:growth -->
-## Support the project
-
-If three-ui saves you time, **[star it on GitHub](https://github.com/nirholas/three-ui)**. Stars are how other developers and AI agents find the repositories worth trusting, and they cost you one click.
-
-Know someone who would use it? [Post on X](https://twitter.com/intent/tweet?text=three-ui%3A%20Browser-native%203D%20agent%20viewer%20and%20chat%20UI%20from%20three.ws%3A%20drop%20in%20a%20GLB%2C%20give%20it%20an%20LLM%20brain%2C%20and&url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fthree-ui) · [Share on Bluesky](https://bsky.app/intent/compose?text=three-ui%3A%20Browser-native%203D%20agent%20viewer%20and%20chat%20UI%20from%20three.ws%3A%20drop%20in%20a%20GLB%2C%20give%20it%20an%20LLM%20brain%2C%20and%20https%3A%2F%2Fgithub.com%2Fnirholas%2Fthree-ui) · [Share on LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fthree-ui) · [Submit to Hacker News](https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2Fnirholas%2Fthree-ui&t=three-ui%3A%20Browser-native%203D%20agent%20viewer%20and%20chat%20UI%20from%20three.ws%3A%20drop%20in%20a%20GLB%2C%20give%20it%20an%20LLM%20brain%2C%20and) · [Share on Reddit](https://www.reddit.com/submit?url=https%3A%2F%2Fgithub.com%2Fnirholas%2Fthree-ui&title=three-ui%3A%20Browser-native%203D%20agent%20viewer%20and%20chat%20UI%20from%20three.ws%3A%20drop%20in%20a%20GLB%2C%20give%20it%20an%20LLM%20brain%2C%20and)
-
-## Built for AI agents too
-
-Coding agents and LLM tooling can read this repo directly: [AGENTS.md](./AGENTS.md), [llms.txt](./llms.txt), [llms-full.txt](./llms-full.txt). Point an agent at `https://github.com/nirholas/three-ui` and it has the context it needs.
-
-## More from the same author
-
-- [All repositories by nirholas](https://github.com/nirholas/nirholas#readme): the full catalog, grouped by topic
-- [three.ws](https://three.ws): the platform for 3D AI agents with Solana wallets, a skill marketplace and x402 payments
-- Questions or ideas: [open an issue](https://github.com/nirholas/three-ui/issues) or [start a discussion](https://github.com/nirholas/three-ui/discussions)
-
-## Contributors
-
-[![Contributors](https://contrib.rocks/image?repo=nirholas/three-ui)](https://github.com/nirholas/three-ui/graphs/contributors)
-
-<!-- /three.ws:growth -->
