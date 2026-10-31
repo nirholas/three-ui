@@ -16,14 +16,14 @@ describe('CharacterManager Core Logic', () => {
 
     it('should handle manager initialization patterns', () => {
       // Mock manager classes that would be initialized
-      const MockAnimationManager = vi.fn().mockImplementation(() => ({
+      const MockAnimationManager = vi.fn().mockImplementation(function () { return {
         setScale: vi.fn(),
         loadAnimation: vi.fn(),
-      }))
+      } })
 
-      const MockScreenshotManager = vi.fn().mockImplementation(() => ({
+      const MockScreenshotManager = vi.fn().mockImplementation(function () { return {
         takeScreenshot: vi.fn(),
-      }))
+      } })
 
       const mockOptions = {
         parentModel: new THREE.Object3D(),
